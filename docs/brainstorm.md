@@ -579,3 +579,124 @@ smartrouter start
 ```
 
 **Why this matters:** Without this, every team member starts with a cold-start classifier. With profile sharing, the best-performing routing config can be shared across the whole team or even open-sourced as a community-tuned profile for specific use cases (e.g., "optimized for coding assistants", "optimized for customer support").
+
+---
+
+## 🧠 Idea 5: LLM Context Management (Critical Design Decision)
+
+> **The question:** When routing across different models in a multi-turn conversation, how does context travel? What if the context is too large for the cheap model?
+
+### How OpenAI API Context Works
+
+Every request to the OpenAI-compatible API carries the **full conversation history** in the `messages` array. SmartRouter is stateless — the calling app manages history:
+
+```python
+# Turn 1 — classified as cheap → routed to Groq
+messages = [
+  {"role": "system",    "content": "You are a Python expert."},
+  {"role": "user",      "content": "What is a list comprehension?"}
+]
+# Groq responds: "A list comprehension is..."
+
+# Turn 2 — app appends the history and sends it again
+messages = [
+  {"role": "system",    "content": "You are a Python expert."},
+  {"role": "user",      "content": "What is a list comprehension?"},
+  {"role": "assistant", "content": "A list comprehension is..."},   # ← from Groq
+  {"role": "user",      "content": "Now write a compiler in Rust"}  # ← complex!
+]
+# SmartRouter scores this as complex → routes to GPT-4o
+# GPT-4o receives the FULL history, including the Groq response
+```
+
+**Good news:** Context travels automatically because the calling app sends the full `messages` array every time. SmartRouter just forwards it all to whichever model it picks.
+
+---
+
+### Problem 1: Context Window Mismatch (Must Solve)
+
+Each model has a maximum context window (in tokens):
+
+| Model | Context Window |
+|---|---|
+| Groq Llama-3.1-8B | 128K tokens |
+| GPT-4o-mini | 128K tokens |
+| Claude 3.5 Sonnet | 200K tokens |
+| Local Ollama Llama-3.2-3B | 8K tokens ⚠️ |
+| Local TinyLlama | 2K tokens ⚠️ |
+
+**The risk:** A user configures a tiny local model as their "cheap" tier. A conversation grows to 20K tokens. SmartRouter routes a simple question to that model, which fails or silently truncates the history.
+
+**The fix — Context Window Guard:**
+```yaml
+tiers:
+  cheap:
+    base_url: "http://localhost:11434/v1"
+    model: "llama3.2:3b"
+    max_context_tokens: 8192    # ← Declare the limit
+    api_key: ""
+```
+
+Before routing to a tier, SmartRouter counts the tokens in the `messages` array. If it exceeds `max_context_tokens`, it automatically upgrades to the next tier.
+
+```
+Token count: 12,000  >  cheap tier limit: 8,192
+  → Auto-upgrade to "mid" tier (even though complexity score says "cheap")
+  → Log: "Upgraded from cheap→mid: context overflow (12K > 8K)"
+```
+
+---
+
+### Problem 2: Persistent System Prompt Injection
+
+Often, users want to inject a consistent system prompt into every request without doing it in their application code. This is useful for:
+- Setting a persona ("You are a senior software engineer...")
+- Injecting project context ("This is a Python FastAPI project...")
+- Adding compliance rules ("Never reveal internal data...")
+
+**Proposed config:**
+```yaml
+context:
+  system_prompt: |
+    You are a senior software engineer at a Python shop.
+    Always prefer functional, readable code over clever one-liners.
+    When in doubt, write a docstring.
+  # If the calling app ALREADY includes a system prompt, this behaviour applies:
+  system_prompt_mode: "prepend"   # Options: prepend | append | replace | skip
+```
+
+SmartRouter injects this system prompt into every request before forwarding — even if the calling app doesn't include one.
+
+---
+
+### Problem 3: Context-Aware Routing Score
+
+The current complexity scorer only looks at **the latest user message**. But this misses a critical signal: **context size itself is a measure of complexity**.
+
+A simple question asked against a 100K-token codebase is NOT a simple request for the cheap model — it requires a model with a large enough context window AND the intelligence to reason over a large codebase.
+
+**Proposed enhancement to the scoring formula:**
+```
+final_score = (0.7 × prompt_complexity_score) + (0.3 × context_size_score)
+
+where:
+  prompt_complexity_score = classifier output from the latest message
+  context_size_score      = min(total_tokens / 32000, 1.0)
+                           # Normalised: 32K tokens = score of 1.0
+```
+
+This means:
+- A trivial question with 5K tokens of history → slight score boost → stays cheap
+- A trivial question with 80K tokens of history → significant score boost → may upgrade to smart
+
+---
+
+### Summary of Context Features
+
+| Feature | What It Does | Priority |
+|---|---|---|
+| **Full history forwarding** | Context travels automatically via `messages` array | ✅ Already free |
+| **Context Window Guard** | Auto-upgrades tier if context exceeds model limit | 🔴 Must-have v0.2 |
+| **System Prompt Injection** | Injects persistent system prompt from config | 🟡 v0.3 |
+| **Context-Aware Scoring** | Factors context size into routing score | 🟡 v0.3 |
+
