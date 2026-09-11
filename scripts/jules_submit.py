@@ -45,7 +45,7 @@ API_URL  = "https://jules.googleapis.com/v1alpha/sessions"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ── Update once the GitHub repo is created ───────────────────────────────────
-REPO_SOURCE = "sources/github/KrushnaVardhanReddy/DynamicLlmRouting"
+REPO_SOURCE = "sources/github/KrushnaVardhanReddy/SmartRouter"
 
 # Parse --branch from args
 BRANCH = "feature/dev"
