@@ -69,6 +69,7 @@ smartrouter start --config smartrouter.yaml
 
 ```python
 from smartrouter import SmartRouterMiddleware
+
 app.add_middleware(SmartRouterMiddleware, config="smartrouter.yaml")
 # Your existing endpoints now auto-route through SmartRouter
 ```
@@ -83,8 +84,7 @@ app.add_middleware(SmartRouterMiddleware, config="smartrouter.yaml")
 
 ```python
 client = OpenAI(
-    api_key="sk-smartrouter-YOUR_KEY",
-    base_url="https://api.smartrouter.dev/v1"
+    api_key="sk-smartrouter-YOUR_KEY", base_url="https://api.smartrouter.dev/v1"
 )
 # We handle routing. You get one unified invoice.
 ```
@@ -593,17 +593,17 @@ Every request to the OpenAI-compatible API carries the **full conversation histo
 ```python
 # Turn 1 — classified as cheap → routed to Groq
 messages = [
-  {"role": "system",    "content": "You are a Python expert."},
-  {"role": "user",      "content": "What is a list comprehension?"}
+    {"role": "system", "content": "You are a Python expert."},
+    {"role": "user", "content": "What is a list comprehension?"},
 ]
 # Groq responds: "A list comprehension is..."
 
 # Turn 2 — app appends the history and sends it again
 messages = [
-  {"role": "system",    "content": "You are a Python expert."},
-  {"role": "user",      "content": "What is a list comprehension?"},
-  {"role": "assistant", "content": "A list comprehension is..."},   # ← from Groq
-  {"role": "user",      "content": "Now write a compiler in Rust"}  # ← complex!
+    {"role": "system", "content": "You are a Python expert."},
+    {"role": "user", "content": "What is a list comprehension?"},
+    {"role": "assistant", "content": "A list comprehension is..."},  # ← from Groq
+    {"role": "user", "content": "Now write a compiler in Rust"},  # ← complex!
 ]
 # SmartRouter scores this as complex → routes to GPT-4o
 # GPT-4o receives the FULL history, including the Groq response
