@@ -19,6 +19,92 @@ Your App  →  SmartRouter  →  Groq / OpenAI / Anthropic
 
 ---
 
+## 📍 Product Positioning — Where Does SmartRouter Live?
+
+> **The most important question to answer before building anything.**
+
+### The Core Mental Model
+
+SmartRouter is a **reverse proxy for LLM traffic** — exactly like Nginx is a reverse proxy for web traffic. It sits *between* your application and the LLM providers. It is NOT a cloud service you sign up for (initially). It is infrastructure YOU run on your own machine or server.
+
+```
+WITHOUT SmartRouter:
+  Your App ─────────────────────────────────────────► OpenAI ($$$)
+
+WITH SmartRouter (self-hosted):
+  Your App ──► SmartRouter :8080 ──► Groq       (score < 0.4, ~$0.05/1M)
+                                ──► OpenAI mini  (score 0.4–0.8, ~$0.15/1M)
+                                ──► Anthropic    (score > 0.8, ~$3.00/1M)
+```
+
+**The one-line change to integrate:**
+```python
+# Before
+client = OpenAI(api_key="sk-...")
+
+# After — everything else in your code stays identical
+client = OpenAI(api_key="sk-...", base_url="http://localhost:8080/v1")
+```
+
+### Deployment Mode 1: Self-Hosted Docker / Binary (v0.1 — Primary Target)
+
+**Who:** Individual developers, small startups, privacy-conscious teams.
+
+```bash
+# Option A: Docker
+docker run -v ./smartrouter.yaml:/config.yaml -p 8080:8080 smartrouter/smartrouter
+
+# Option B: pip install
+pip install smartrouter
+smartrouter start --config smartrouter.yaml
+```
+
+**Where it lives:** On your own machine, VPS, or Kubernetes cluster. Your API keys never leave your infrastructure. Fully private. Fully auditable open-source code.
+
+**Best for:** "I want to cut my OpenAI bill and I'm comfortable running a Docker container."
+
+### Deployment Mode 2: Python Middleware / Library (v1.0)
+
+**Who:** Python developers who already have a FastAPI/Flask backend and don't want a separate process.
+
+```python
+from smartrouter import SmartRouterMiddleware
+app.add_middleware(SmartRouterMiddleware, config="smartrouter.yaml")
+# Your existing endpoints now auto-route through SmartRouter
+```
+
+**Where it lives:** Inside your existing Python app. No separate server, no Docker container.
+
+**Best for:** "I'm already running FastAPI. I want to drop in a middleware and have smart routing happen automatically."
+
+### Deployment Mode 3: SmartRouter Cloud — api.smartrouter.dev (Paid SaaS, v1.0+)
+
+**Who:** Teams who want zero infrastructure. Just a URL to point at.
+
+```python
+client = OpenAI(
+    api_key="sk-smartrouter-YOUR_KEY",
+    base_url="https://api.smartrouter.dev/v1"
+)
+# We handle routing. You get one unified invoice.
+```
+
+**Where it lives:** On our cloud. We manage uptime, billing aggregation across providers, and infrastructure.
+
+**Best for:** "I don't want to manage infrastructure. Just make my AI costs cheaper."
+
+### Summary
+
+| Mode | Runs On | Data Privacy | Cost | Target Version |
+|---|---|---|---|---|
+| Self-hosted Docker | Your infra | 🔒 Fully private | Free (OSS) | v0.1 |
+| Python Middleware | Your app | 🔒 Fully private | Free (OSS) | v1.0 |
+| SmartRouter Cloud | Our servers | ⚠️ Routes through us | Paid SaaS | v1.0+ |
+
+> **Playbook:** Start open-source to get trust + GitHub stars → launch cloud version for teams who don't want to manage infrastructure. This is the exact model used by Grafana, Supabase, and Posthog.
+
+---
+
 ## ✅ Decisions Made
 
 | Decision | Choice | Why |
