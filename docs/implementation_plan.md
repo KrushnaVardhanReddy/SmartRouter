@@ -39,28 +39,13 @@ smartrouter/
 
 ## 4. Implementation Phases
 
-### Phase 1: Core Setup & Contract Definition
-1. Initialize a Python `uv` or `poetry` project (or just `requirements.txt`).
-2. Create the Pydantic data models for the OpenAI `ChatCompletionRequest` and `ChatCompletionResponse`.
-3. Set up the FastAPI server in `main.py` serving these endpoints.
+The execution plan has been broken down into nested phases:
 
-### Phase 2: Passthrough Router (No ML yet)
-1. Implement the async `httpx` clients for Groq and OpenAI.
-2. Build a simple passthrough that blindly forwards the incoming payload to Groq and returns the response.
-3. Validate that a standard OpenAI SDK client can connect to `http://localhost:8080/v1` and get a response.
-
-### Phase 3: Classifier Integration
-1. Adapt the `train_classifier.py` script from the `Local_AI_Assistant` project to generate a `complexity_classifier.pkl`.
-2. Implement the `classifier/engine.py` to load the embeddings model and the `.pkl` file.
-3. Hook the classifier into the request lifecycle to generate a `0.0 - 1.0` score before routing.
-
-### Phase 4: Dynamic Routing Logic
-1. Implement threshold logic (`ROUTER_LOW_THRESHOLD`, `ROUTER_HIGH_THRESHOLD`).
-2. Route low-score requests to Groq (Llama-3), mid-score to OpenAI (GPT-4o-mini), and high-score to Anthropic/OpenAI (Claude 3.5 / GPT-4o).
-
-### Phase 5: Distribution (PyInstaller & Docker)
-1. Create a multi-stage `Dockerfile`.
-2. Write a `build.sh` script using **PyInstaller** to compile the entire Python app (including the FastAPI server and ML models) into a single executable binary.
+- [Phase 1: Core Setup & Contract Definition](phases/phase_1_core_setup/README.md)
+- [Phase 2: Passthrough Router (No ML yet)](phases/phase_2_passthrough_router/README.md)
+- [Phase 3: Classifier Integration](phases/phase_3_classifier_integration/README.md)
+- [Phase 4: Dynamic Routing Logic](phases/phase_4_dynamic_routing/README.md)
+- [Phase 5: Distribution (PyInstaller & Docker)](phases/phase_5_distribution/README.md)
 
 ---
 
