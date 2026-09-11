@@ -498,3 +498,84 @@ After all the brainstorming, here is the recommended v0.1 → v1.0 scope:
 - [ ] Web dashboard (cost analytics, routing decisions)
 - [ ] Community classifier retraining from user feedback
 - [ ] Full documentation + quickstart guide
+- [ ] **Context portability** — `smartrouter export` / `smartrouter import` profile bundles
+
+---
+
+## 🔄 Idea 4: Context Portability (Local ↔ Cloud Switching)
+
+> **The question:** When you switch from self-hosted → SmartRouter Cloud (or share with a teammate), do you lose your routing behavior and history?
+> **The answer: No — everything is captured in a portable Profile Bundle.**
+
+### What "Context" Means in SmartRouter
+
+| Context Component | What It Is | Portable? |
+|---|---|---|
+| `smartrouter.yaml` | Tier config, thresholds, model choices | ✅ Yes — just a YAML file |
+| `complexity_classifier.pkl` | The ML model trained on YOUR traffic | ✅ Yes — export/import |
+| Routing history / decision log | Which prompts went where, why | ✅ Yes — SQLite export |
+| Usage stats | Cost savings, model usage breakdown | ✅ Yes — JSON export |
+| API keys | Your provider keys | ❌ Never — stays in `.env.local` |
+
+### The Profile Bundle
+
+A **Profile Bundle** (`.srprofile`) is a single portable zip that contains everything except secrets:
+
+```
+myapp.srprofile
+├── smartrouter.yaml          ← tier config + thresholds
+├── complexity_classifier.pkl ← your trained ML model
+├── routing_history.sqlite    ← all past routing decisions
+└── metadata.json             ← version, created_at, stats summary
+```
+
+### CLI Commands
+
+```bash
+# Export current context to a portable bundle
+smartrouter export --output myapp.srprofile
+
+# Import a bundle into a new environment (local or cloud)
+smartrouter import --input myapp.srprofile
+
+# Push local context to SmartRouter Cloud
+smartrouter push --cloud --api-key sk-smartrouter-YOUR_KEY
+
+# Pull cloud context back to local
+smartrouter pull --cloud --api-key sk-smartrouter-YOUR_KEY
+```
+
+### Switching Local → Cloud (Zero Config Drift)
+
+```
+Step 1: Run locally, build up routing history + retrain classifier
+        smartrouter start --config smartrouter.yaml
+
+Step 2: Export your profile bundle
+        smartrouter export --output myapp.srprofile
+
+Step 3: Upload to SmartRouter Cloud via dashboard or CLI
+        smartrouter push --cloud --api-key sk-smartrouter-...
+
+Step 4: Change ONE line in your app
+        base_url = "http://localhost:8080/v1"        # before
+        base_url = "https://api.smartrouter.dev/v1"  # after
+
+Routing behavior is IDENTICAL. Same thresholds. Same classifier. Same history.
+```
+
+### Sharing Context with Teammates
+
+```bash
+# Developer A exports their tuned profile
+smartrouter export --output team-profile.srprofile
+git add team-profile.srprofile && git commit -m "share routing profile"
+
+# Developer B imports it — instantly gets the same routing behavior
+git pull
+smartrouter import --input team-profile.srprofile
+smartrouter start
+# Done. Identical routing behavior from day 1.
+```
+
+**Why this matters:** Without this, every team member starts with a cold-start classifier. With profile sharing, the best-performing routing config can be shared across the whole team or even open-sourced as a community-tuned profile for specific use cases (e.g., "optimized for coding assistants", "optimized for customer support").

@@ -184,3 +184,45 @@ v1.0+ ──►  SmartRouter Cloud — api.smartrouter.dev
 | **v1.0** | Open Source Launch | `pip install smartrouter`, Python middleware, full docs & quickstart, community classifier retraining pipeline |
 | **v1.0+** | Cloud SaaS | Managed cloud at `api.smartrouter.dev`, unified billing (one invoice), A2A agent registration |
 
+## Context Portability — Local ↔ Cloud
+
+Switching between self-hosted and cloud (or sharing config with teammates) is a first-class feature. All routing context is captured in a portable **Profile Bundle** (`.srprofile`) that can be exported, imported, and version-controlled.
+
+### What's in a Profile Bundle
+
+| File | Contents | Secret? |
+|---|---|---|
+| `smartrouter.yaml` | Tier config, thresholds, model names | No — share freely |
+| `complexity_classifier.pkl` | Your trained ML model | No — share freely |
+| `routing_history.sqlite` | Past routing decisions and logs | No — share freely |
+| `metadata.json` | Version, stats summary | No — share freely |
+| `.env.local` | API keys | **Yes — never included** |
+
+### Switching Local → Cloud in 4 Steps
+
+```bash
+# 1. Export your local context
+smartrouter export --output myapp.srprofile
+
+# 2. Push to SmartRouter Cloud
+smartrouter push --cloud --api-key sk-smartrouter-YOUR_KEY
+
+# 3. Change one line in your app
+#    base_url="http://localhost:8080/v1"       # before
+#    base_url="https://api.smartrouter.dev/v1" # after
+
+# 4. Done — identical routing behavior in the cloud
+```
+
+### Sharing with Teammates
+
+```bash
+# Developer A: export and commit the profile
+smartrouter export --output team.srprofile
+git add team.srprofile && git commit -m "share routing profile"
+
+# Developer B: import and start — same routing from day 1
+git pull && smartrouter import --input team.srprofile && smartrouter start
+```
+
+> **Key principle:** API keys never leave your machine. Only the routing logic and training data travel in the bundle.
