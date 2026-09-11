@@ -30,7 +30,8 @@ smartrouter/
 │   └── text_utils.py     # Prompt extraction from the request payload
 ├── router/
 │   ├── dispatcher.py     # Uses the complexity score to pick a provider
-│   └── clients.py        # Async httpx wrappers for Groq, OpenAI, Anthropic
+│   ├── base_provider.py  # Abstract interface for LLM providers (for easy extension)
+│   └── clients.py        # Async httpx wrappers implementing the provider interface (OpenRouter, Groq, OpenAI, etc.)
 ├── core/
 │   ├── config.py         # Pydantic settings loading from .env.local
 │   └── logging.py        # Structured JSON logging
@@ -54,5 +55,5 @@ The execution plan has been broken down into nested phases:
 
 ## Verification Plan
 - We will test the router using standard OpenAI Python/Node SDK clients configured with `base_url="http://localhost:8080/v1"`.
-- We will assert that trivial prompts (e.g., "Say hi") route to Groq and return in < 500ms.
-- We will assert that complex prompts (e.g., "Write a compiler in Rust") route to the smart model.
+- We will assert that trivial prompts (e.g., "Say hi") route to the cheap tier and return in < 500ms.
+- We will assert that complex prompts (e.g., "Write a compiler in Rust") route to the smart tier.

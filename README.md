@@ -13,8 +13,8 @@ Sending a trivial prompt to a frontier model is a massive waste of money and unn
 An open-source, lightweight proxy router that acts as a middleman between your application and LLM providers. 
 
 When your app sends a prompt, the router instantly analyzes its "complexity". 
-- If the prompt is simple, it seamlessly routes the request to a **cheap and fast model** (e.g., Llama-3 via Groq). 
-- If the prompt is highly complex (e.g., advanced reasoning, heavy coding), it routes the request to an **expensive, smart model** (e.g., GPT-4o or Claude 3.5 Sonnet).
+- If the prompt is simple, it seamlessly routes the request to a **cheap and fast model** (e.g., Llama-3 via OpenRouter). 
+- If the prompt is highly complex (e.g., advanced reasoning, heavy coding), it routes the request to an **expensive, smart model** (e.g., Claude 3.5 Sonnet via OpenRouter).
 
 **The Result:** You maintain frontier-level quality on hard tasks while slashing your overall API bill by up to 80% on easy tasks.
 
@@ -23,9 +23,9 @@ When your app sends a prompt, the router instantly analyzes its "complexity".
 1. **The Classifier:** We train a fast, lightweight local classifier (such as a Scikit-Learn Logistic Regression model using `nomic-embed-text` embeddings, or a small BERT model). 
 2. **Scoring:** When a prompt arrives, the classifier generates a "Complexity Score" from `0.0` to `1.0` in milliseconds.
 3. **Routing Thresholds:** 
-   - `Score < 0.4` ➡️ Route to Llama-3-8b (Groq) - Cost: ~$0.05 / 1M tokens
-   - `0.4 <= Score <= 0.8` ➡️ Route to GPT-4o-mini - Cost: ~$0.15 / 1M tokens
-   - `Score > 0.8` ➡️ Route to Claude 3.5 Sonnet - Cost: ~$3.00 / 1M tokens
+   - `Score < 0.4` ➡️ Route to `meta-llama/llama-3-8b-instruct` (via OpenRouter) - Cost: ~$0.05 / 1M tokens
+   - `0.4 <= Score <= 0.8` ➡️ Route to `openai/gpt-4o-mini` (via OpenRouter) - Cost: ~$0.15 / 1M tokens
+   - `Score > 0.8` ➡️ Route to `anthropic/claude-3.5-sonnet` (via OpenRouter) - Cost: ~$3.00 / 1M tokens
 4. **Standardized API:** The router exposes a standard OpenAI-compatible API endpoint. To the developer, it looks exactly like querying `openai.chat.completions.create(...)`, but the router handles the magic behind the scenes.
 
 ## Why This is a Great Open-Source Project
