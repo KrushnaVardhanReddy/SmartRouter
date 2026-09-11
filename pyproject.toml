@@ -7,8 +7,11 @@ requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
+    "joblib>=1.6.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
+    "scikit-learn>=1.9.1",
+    "sentence-transformers>=6.0.1",
     "uvicorn>=0.52.4",
 ]
 
@@ -19,3 +22,8 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.7",
 ]
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.ruff.lint]
+ignore = ["BLE001"]
