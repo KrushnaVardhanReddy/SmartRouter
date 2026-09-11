@@ -148,3 +148,57 @@ MANDATORY RULES — VIOLATION = REJECTED PR:
 6. All new modules must include a corresponding test file in tests/.
 7. Commit message must start with "jules: " prefix.
 ```
+
+## Product Journey & Roadmap
+
+SmartRouter starts as a self-hosted tool and evolves into a fully managed cloud service. The adoption journey is intentionally frictionless at every stage.
+
+### Where SmartRouter Lives
+
+```
+v0.1  ──►  Docker container on your machine or VPS
+           docker run -p 8080:8080 smartrouter/smartrouter
+           Setup time: ~5 minutes
+
+v0.3  ──►  pip install smartrouter (developer CLI)
+           smartrouter start --config smartrouter.yaml
+           Setup time: ~1 minute
+
+v1.0  ──►  Python middleware (zero separate process)
+           app.add_middleware(SmartRouterMiddleware)
+           Setup time: 0 minutes — drop into existing app
+
+v1.0+ ──►  SmartRouter Cloud — api.smartrouter.dev
+           client = OpenAI(base_url="https://api.smartrouter.dev/v1")
+           Setup time: 0 minutes — just change base_url
+```
+
+### Feature Roadmap
+
+| Version | Milestone | Key Features |
+|---|---|---|
+| **v0.1** | Proof of Concept | OpenAI-compatible passthrough, `smartrouter.yaml` config, 3 configurable tiers (any `base_url` + model) |
+| **v0.2** | Smart Routing | Complexity classifier (scikit-learn), dynamic tier routing, streaming (`stream: true`), `GET /v1/usage` cost report, `X-SmartRouter-Model` response headers |
+| **v0.3** | Production Ready | Semantic cache, budget circuit breaker, fallback chain (auto-retry on 429), MCP server, Docker image on DockerHub |
+| **v0.4** | Developer Tools | Analytics web dashboard, `/v1/explain` endpoint, `force_model` override, A/B testing mode |
+| **v1.0** | Open Source Launch | `pip install smartrouter`, Python middleware, full docs & quickstart, community classifier retraining pipeline |
+| **v1.0+** | Cloud SaaS | Managed cloud at `api.smartrouter.dev`, unified billing (one invoice), A2A agent registration |
+
+### The Conversion Funnel
+
+```
+Indie developer self-hosts it
+        │  saves $200/month on AI bills
+        ▼
+Shares it with team
+        │  team saves $2,000/month
+        ▼
+Company doesn't want to manage Docker
+        │  upgrades to SmartRouter Cloud (paid)
+        ▼
+Enterprise needs compliance & SSO
+        │  SmartRouter Enterprise (paid, custom)
+        ▼
+```
+
+> This is the exact open-source → SaaS playbook used by **Grafana, Supabase, PocketBase, and Posthog** — build trust with a free self-hosted tool, monetize the teams who want zero infrastructure management.
