@@ -1,35 +1,56 @@
 # SmartRouter Task Tracker
 
-This document tracks the execution phases of the SmartRouter project.
+This document tracks the execution phases of the SmartRouter project, aligned with our v0.1 to v1.0 release roadmap.
 Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 
-## Phase 1: Core Setup & Contract Definition
+## Phase 1 (v0.1): Core Setup & Passthrough Proxy
+*Goal: Prove the OpenAI-compatible API works end-to-end with configurable tiers (no ML).*
 
 - [x] Initialize Python project using `uv`
 - [x] Define `contracts/openapi.yaml` (OpenAI proxy schema)
 - [x] Define `contracts/config_schema.json` (Configuration schema)
 - [ ] (Jules) Generate Pydantic models in `smartrouter/api/models.py` (P1-T1)
-- [ ] (Jules) Implement basic FastAPI setup in `smartrouter/main.py` (P1-T2)
-- [ ] (Jules) Set up test skeleton in `tests/test_api/test_routes.py` (P1-T3)
+- [ ] (Jules) Implement `base_provider.py` and OpenRouter Client (P1-T2)
+- [ ] (Jules) Connect FastAPI routes to passthrough client for E2E (P1-T3)
+- [ ] (Jules) Set up E2E Pytest suite (P1-T4)
 
-## Phase 2: Passthrough Router (No ML yet)
+## Phase 2 (v0.2): The Smart Router (Classifier & Context)
+*Goal: Add the complexity classifier, context guarding, and streaming.*
 
-- [ ] Add `base_provider.py` abstract interface
-- [ ] Implement OpenRouter client wrapper
-- [ ] Connect FastAPI routes to passthrough client
+- [ ] Set up `train_classifier.py` and ML dependencies (`scikit-learn`, `sentence-transformers`)
+- [ ] Create `classifier/engine.py` to embed and score prompts
+- [ ] Implement Dynamic Routing Logic (read config thresholds and route)
+- [ ] **Context Window Guard:** Auto-upgrade tier if `messages` token count exceeds tier limit
+- [ ] Add Streaming Support (`stream: true` SSE proxying)
+- [ ] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
+- [ ] Add `GET /v1/usage` (cost savings report endpoint)
+- [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
-## Phase 3: Classifier Integration
+## Phase 3 (v0.3): Production Resilience
+*Goal: Make it stable for production environments and agentic ecosystems.*
 
-- [ ] Set up `train_classifier.py`
-- [ ] Add scikit-learn and sentence-transformers dependencies
-- [ ] Create `classifier/engine.py` for scoring prompts
+- [ ] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
+- [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
+- [ ] Fallback Chain (auto-retry next tier on 429/503 HTTP errors)
+- [ ] MCP Server (`/.well-known/mcp/`) for native agent tool integration
+- [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
+- [ ] **E2E Testing:** Verify fallback chains and circuit breakers under load (no mocking)
 
-## Phase 4: Dynamic Routing Logic
+## Phase 4 (v0.4): Developer Tools
+*Goal: Add visibility and debugging tools for developers.*
 
-- [ ] Read thresholds from `smartrouter.yaml` config
-- [ ] Route low scores to cheap tier, high scores to smart tier
+- [ ] Analytics Web Dashboard (simple UI to view routing decisions and cost savings)
+- [ ] `GET /v1/explain` endpoint (returns the chosen model and why)
+- [ ] `force_model` override (via custom headers or prompt injection for testing)
+- [ ] Persistent System Prompt Injection (append/prepend from config)
+- [ ] **E2E Testing:** Verify system prompt injection and dashboard analytics end-to-end
 
-## Phase 5: Distribution (PyInstaller & Docker)
+## Phase 5 (v1.0): Open Source Launch & Distribution
+*Goal: Frictionless adoption for the community.*
 
-- [ ] Create multi-stage `Dockerfile`
-- [ ] Prepare distribution scripts
+- [ ] `smartrouter` CLI (commands: `start`, `export`, `import`)
+- [ ] Profile Bundles (`.srprofile` context portability and sharing)
+- [ ] Python Middleware implementation (drop into existing FastAPI apps)
+- [ ] Documentation, Quickstart Guide, and PyPI distribution
+- [ ] SSO / Auth Gateway integration (API keys mapping to users)
+- [ ] **E2E Testing:** Verify CLI and Docker deployments operate successfully in a clean environment

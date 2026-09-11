@@ -1,0 +1,33 @@
+TASK: P1-T4 — Pytest Suite for E2E Route
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create the initial Pytest test suite to verify the `/v1/chat/completions`
+endpoint and the OpenRouter client logic.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `tests/test_api/test_routes.py`
+- Target file: `tests/test_router/test_clients.py`
+- Write an integration test that uses an `httpx.AsyncClient` against the FastAPI app.
+- Because this is an E2E test, use the standard `respx` library or Python's `unittest.mock` to intercept the outgoing HTTPX request to OpenRouter so we don't hit the live API during CI tests, but ensure the full FastAPI -> Client -> Network layer is executed.
+- Assert the status code is 200 and the response correctly maps to `ChatCompletionResponse`.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Use `pytest-asyncio` for async tests.
+- Mock the external `httpx.AsyncClient.post` call to `openrouter.ai` to return a sample OpenAI-formatted JSON payload.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- tests/test_api/test_routes.py
+- tests/test_router/test_clients.py
+
+Commit: "jules: add pytest suite for e2e passthrough routing"
+Target branch: feature/dev

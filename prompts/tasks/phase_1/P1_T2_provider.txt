@@ -1,36 +1,35 @@
-TASK: P1-T2 — FastAPI Entrypoint & Mock Route
+TASK: P1-T2 — Provider Interface & OpenRouter Client
 
 ═══════════════════════════════════════════════════════════════
 OBJECTIVE
 ═══════════════════════════════════════════════════════════════
-Create the FastAPI entrypoint and route definitions for SmartRouter.
-This sets up the core HTTP server capable of receiving the OpenAI
-requests and validates that our Pydantic models from P1-T1 integrate
-correctly with FastAPI.
+Create the base provider interface and implement the OpenRouter HTTP client.
+This ensures we have a fully functional E2E passthrough system in Phase 1
+without relying on mock endpoints.
 
 ═══════════════════════════════════════════════════════════════
 CONSTRAINTS & RULES
 ═══════════════════════════════════════════════════════════════
-- Target file: `smartrouter/main.py`
-- Create a `POST` endpoint at `/v1/chat/completions`.
-- The endpoint must accept `ChatCompletionRequest` and return `ChatCompletionResponse`.
-- For Phase 1, return a hardcoded mock response with a single choice ("Hello from SmartRouter mock!").
-- Do NOT implement actual LLM routing yet.
+- Target files: `smartrouter/router/base_provider.py`, `smartrouter/router/clients.py`
+- Define an abstract base class `BaseProvider` with an async `generate` method.
+- Implement `OpenRouterClient` that inherits from `BaseProvider`.
+- Use `httpx.AsyncClient` to forward the `ChatCompletionRequest` to OpenRouter's `/v1/chat/completions` endpoint.
+- Ensure the API Key is read from `os.getenv("OPENROUTER_API_KEY")`.
 
 ═══════════════════════════════════════════════════════════════
 IMPLEMENTATION HINTS
 ═══════════════════════════════════════════════════════════════
-- Instantiate the FastAPI app with title="SmartRouter" and version="1.0.0".
-- Make sure to import the models from `smartrouter.api.models`.
-- Use standard `async def` for the endpoint.
-- Run `ruff` and `mypy` to verify typing.
+- The OpenRouter URL is `https://openrouter.ai/api/v1/chat/completions`.
+- Pass the required OpenRouter headers: `Authorization: Bearer <key>`.
+- The `generate` method should take a `ChatCompletionRequest` model and return a `ChatCompletionResponse` model.
 
 ═══════════════════════════════════════════════════════════════
 FILES LIST
 ═══════════════════════════════════════════════════════════════
 
 FILES TO CREATE:
-- smartrouter/main.py   ← FastAPI app entrypoint
+- smartrouter/router/base_provider.py
+- smartrouter/router/clients.py
 
-Commit: "jules: implement basic fastapi mock route"
+Commit: "jules: implement base provider and openrouter client"
 Target branch: feature/dev
