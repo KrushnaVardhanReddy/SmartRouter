@@ -1,0 +1,36 @@
+TASK: P1-T2 — FastAPI Entrypoint & Mock Route
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create the FastAPI entrypoint and route definitions for SmartRouter.
+This sets up the core HTTP server capable of receiving the OpenAI
+requests and validates that our Pydantic models from P1-T1 integrate
+correctly with FastAPI.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/main.py`
+- Create a `POST` endpoint at `/v1/chat/completions`.
+- The endpoint must accept `ChatCompletionRequest` and return `ChatCompletionResponse`.
+- For Phase 1, return a hardcoded mock response with a single choice ("Hello from SmartRouter mock!").
+- Do NOT implement actual LLM routing yet.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Instantiate the FastAPI app with title="SmartRouter" and version="1.0.0".
+- Make sure to import the models from `smartrouter.api.models`.
+- Use standard `async def` for the endpoint.
+- Run `ruff` and `mypy` to verify typing.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/main.py   ← FastAPI app entrypoint
+
+Commit: "jules: implement basic fastapi mock route"
+Target branch: feature/dev

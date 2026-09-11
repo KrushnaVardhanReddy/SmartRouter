@@ -1,0 +1,34 @@
+TASK: P1-T3 — Pytest Suite for Mock Route
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create the initial Pytest test suite to verify the `/v1/chat/completions`
+mock endpoint behaves correctly and validates payloads properly.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `tests/test_api/test_routes.py`
+- Write a happy-path test `test_chat_completions_mock` that sends a valid JSON payload.
+- Assert the status code is 200 and the mock content is returned.
+- Write an error-handling test `test_chat_completions_invalid_payload` missing the `messages` field, asserting 422 Unprocessable Entity.
+- Use `httpx.AsyncClient` alongside `pytest-asyncio` to test the FastAPI app.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Import `app` from `smartrouter.main`.
+- You may need to create `tests/conftest.py` if you want to set up common fixtures.
+- Run `pytest -v` to confirm the tests pass against the mock endpoint.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- tests/test_api/test_routes.py   ← Integration tests for endpoints
+- tests/conftest.py               ← (Optional) for pytest fixtures
+
+Commit: "jules: add pytest suite for chat completions route"
+Target branch: feature/dev

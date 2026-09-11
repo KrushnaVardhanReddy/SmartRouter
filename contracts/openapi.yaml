@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: SmartRouter API
+  description: OpenAI-compatible API proxy router
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/v1
+paths:
+  /chat/completions:
+    post:
+      summary: Create a chat completion
+      operationId: createChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+components:
+  schemas:
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, tool]
+        content:
+          type: string
+      required:
+        - role
+        - content
+
+    ChatCompletionRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: "ID of the model to use. SmartRouter intercepts this."
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        temperature:
+          type: number
+          default: 1.0
+        max_tokens:
+          type: integer
+          nullable: true
+        stream:
+          type: boolean
+          default: false
+      required:
+        - messages
+
+    ChatCompletionChoice:
+      type: object
+      properties:
+        index:
+          type: integer
+        message:
+          $ref: '#/components/schemas/ChatMessage'
+        finish_reason:
+          type: string
+          nullable: true
+      required:
+        - index
+        - message
+
+    ChatCompletionUsage:
+      type: object
+      properties:
+        prompt_tokens:
+          type: integer
+        completion_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          default: chat.completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatCompletionChoice'
+        usage:
+          $ref: '#/components/schemas/ChatCompletionUsage'
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices

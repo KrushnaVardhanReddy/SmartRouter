@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SmartRouterConfig",
+  "type": "object",
+  "properties": {
+    "router": {
+      "type": "object",
+      "properties": {
+        "low_threshold": {
+          "type": "number",
+          "default": 0.4
+        },
+        "high_threshold": {
+          "type": "number",
+          "default": 0.8
+        }
+      },
+      "required": ["low_threshold", "high_threshold"]
+    },
+    "tiers": {
+      "type": "object",
+      "properties": {
+        "cheap": { "$ref": "#/definitions/TierConfig" },
+        "mid": { "$ref": "#/definitions/TierConfig" },
+        "smart": { "$ref": "#/definitions/TierConfig" }
+      },
+      "required": ["cheap", "mid", "smart"]
+    }
+  },
+  "required": ["router", "tiers"],
+  "definitions": {
+    "TierConfig": {
+      "type": "object",
+      "properties": {
+        "base_url": { "type": "string" },
+        "model": { "type": "string" },
+        "api_key": { "type": "string" },
+        "timeout_seconds": { "type": "integer", "default": 30 }
+      },
+      "required": ["base_url", "model"]
+    }
+  }
+}

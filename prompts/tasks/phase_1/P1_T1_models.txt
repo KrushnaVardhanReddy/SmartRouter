@@ -1,0 +1,35 @@
+TASK: P1-T1 — Pydantic Model Generation from OpenAPI Spec
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Generate the Pydantic data models for the SmartRouter API by reading the
+`contracts/openapi.yaml` specification file. These models will ensure
+that the FastAPI server strictly validates all incoming payloads against
+the OpenAPI standard.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/api/models.py`
+- Define `ChatMessage`, `ChatCompletionRequest`, `ChatCompletionChoice`, `ChatCompletionUsage`, and `ChatCompletionResponse` exactly as they appear in the OpenAPI spec.
+- Ensure that `stream` defaults to `False` in `ChatCompletionRequest`.
+- Use `typing.List` and `typing.Optional` where appropriate.
+- Add descriptive docstrings or `description=` to `Field` based on the OpenAPI comments.
+- Run `ruff format .` and `ruff check . --fix` when done, then `mypy .` to verify strict typing.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Use `pydantic.BaseModel` and `pydantic.Field`.
+- Do NOT touch any routing logic; this task is only about defining the data structures.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/api/models.py   ← New Pydantic models file
+
+Commit: "jules: generate pydantic models from openapi contract"
+Target branch: feature/dev
