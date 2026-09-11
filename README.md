@@ -184,21 +184,3 @@ v1.0+ ──►  SmartRouter Cloud — api.smartrouter.dev
 | **v1.0** | Open Source Launch | `pip install smartrouter`, Python middleware, full docs & quickstart, community classifier retraining pipeline |
 | **v1.0+** | Cloud SaaS | Managed cloud at `api.smartrouter.dev`, unified billing (one invoice), A2A agent registration |
 
-### The Conversion Funnel
-
-```
-Indie developer self-hosts it
-        │  saves $200/month on AI bills
-        ▼
-Shares it with team
-        │  team saves $2,000/month
-        ▼
-Company doesn't want to manage Docker
-        │  upgrades to SmartRouter Cloud (paid)
-        ▼
-Enterprise needs compliance & SSO
-        │  SmartRouter Enterprise (paid, custom)
-        ▼
-```
-
-> This is the exact open-source → SaaS playbook used by **Grafana, Supabase, PocketBase, and Posthog** — build trust with a free self-hosted tool, monetize the teams who want zero infrastructure management.
