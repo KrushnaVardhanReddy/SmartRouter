@@ -10,9 +10,9 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] Define `contracts/openapi.yaml` (OpenAI proxy schema)
 - [x] Define `contracts/config_schema.json` (Configuration schema)
 - [x] (Jules) Generate Pydantic models in `smartrouter/api/models.py` (P1-T1)
-- [/] (Jules) Implement `base_provider.py` and OpenRouter Client (P1-T2)
-- [ ] (Jules) Connect FastAPI routes to passthrough client for E2E (P1-T3)
-- [ ] (Jules) Set up E2E Pytest suite (P1-T4)
+- [x] (Jules) Implement `base_provider.py` and OpenRouter Client (P1-T2)
+- [/] (Jules) Connect FastAPI routes to passthrough client for E2E (P1-T3)
+- [/] (Jules) Set up E2E Pytest suite (P1-T4)
 
 ## Phase 2 (v0.2): The Smart Router (Classifier & Context)
 *Goal: Add the complexity classifier, context guarding, and streaming.*
@@ -20,8 +20,8 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] (Jules) Implement type-safe YAML config loader (P2-T1)
 - [x] (Jules) Set up `train_classifier.py` and ML dependencies (P2-T2)
 - [x] (Jules) Create `classifier/engine.py` to embed and score prompts (P2-T2)
-- [/] (Jules) Implement Context Window Guard utility in `router/context_guard.py` (P2-T3)
-- [ ] (Jules) Implement Dynamic Routing Logic in `router/dispatcher.py` (P2-T4)
+- [x] (Jules) Implement Context Window Guard utility in `router/context_guard.py` (P2-T3)
+- [/] (Jules) Implement Dynamic Routing Logic in `router/dispatcher.py` (P2-T4)
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
 - [ ] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
 - [ ] Add `GET /v1/usage` (cost savings report endpoint)
