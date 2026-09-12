@@ -103,7 +103,7 @@ def main() -> None:
     try:
         # Load the locally downloaded parquet file
         dataset = load_dataset("parquet", data_files="data/chatbot_arena.parquet", split="train")
-        process_dataset(dataset, output_path, max_samples=2000)
+        process_dataset(dataset, output_path, max_samples=100000)
     except Exception as e:
         logger.warning(f"Could not load the original dataset due to: {e}")
         logger.info(
