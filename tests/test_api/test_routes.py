@@ -12,7 +12,9 @@ def mock_openrouter_api_key(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_chat_completions_route(async_client: AsyncClient, mock_openrouter_api_key):
+async def test_chat_completions_route(
+    async_client: AsyncClient, mock_openrouter_api_key
+):
     request_payload = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [{"role": "user", "content": "Hello!"}],
