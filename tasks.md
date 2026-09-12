@@ -25,14 +25,14 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
 - [x] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
 - [x] Add `GET /v1/usage` (cost savings report endpoint)
-- [/] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
-- [/] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
+- [x] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
+- [x] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
 *Goal: Make it stable for production environments and maximize cost savings.*
 
-- [/] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
+- [x] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
 - [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
 - [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
