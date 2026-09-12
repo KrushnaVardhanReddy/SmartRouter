@@ -1,15 +1,11 @@
-import time
-import uuid
-
-from fastapi import FastAPI
+import httpx
+from fastapi import FastAPI, HTTPException
 
 from smartrouter.api.models import (
-    ChatCompletionChoice,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    ChatCompletionUsage,
-    ChatMessage,
 )
+from smartrouter.router.clients import OpenRouterClient
 
 app = FastAPI(title="SmartRouter", version="1.0.0")
 
@@ -18,22 +14,18 @@ app = FastAPI(title="SmartRouter", version="1.0.0")
 async def create_chat_completion(
     request: ChatCompletionRequest,
 ) -> ChatCompletionResponse:
-    # Phase 1: Return a hardcoded mock response
-    message = ChatMessage(role="assistant", content="Hello from SmartRouter mock!")
-    choice = ChatCompletionChoice(index=0, message=message, finish_reason="stop")
-    usage = ChatCompletionUsage(
-        prompt_tokens=10,
-        completion_tokens=20,
-        total_tokens=30,
-    )
+    try:
+        client = OpenRouterClient()
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    response = ChatCompletionResponse(
-        id=f"chatcmpl-{uuid.uuid4()}",
-        object="chat.completion",
-        created=int(time.time()),
-        model=request.model or "mock-model",
-        choices=[choice],
-        usage=usage,
-    )
-
-    return response
+    try:
+        response = await client.generate(request)
+        return response
+    except httpx.HTTPStatusError as e:
+        # Pass through the upstream HTTP error status code and details if possible
+        status_code = e.response.status_code
+        detail = f"Upstream API error: {e.response.text}"
+        raise HTTPException(status_code=status_code, detail=detail)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
