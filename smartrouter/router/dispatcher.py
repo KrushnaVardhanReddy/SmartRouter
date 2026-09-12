@@ -14,7 +14,9 @@ class RouterDispatcher:
         self.settings = get_settings()
         self.classifier = ClassifierEngine()
 
-    async def dispatch(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+    async def dispatch(
+        self, request: ChatCompletionRequest
+    ) -> tuple[ChatCompletionResponse, str, float]:
         # 1. Score the prompt (using the last user message)
         prompt_text = ""
         for message in reversed(request.messages):
@@ -63,4 +65,5 @@ class RouterDispatcher:
 
         # 4. Dispatch using RouterClient
         client = RouterClient(config=tier_config)
-        return await client.generate(request)
+        response = await client.generate(request)
+        return response, tier_config.model, score

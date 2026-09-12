@@ -77,9 +77,11 @@ async def test_dispatch_picks_cheap_tier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        response = await dispatcher.dispatch(dummy_request)
+        response, model_id, score = await dispatcher.dispatch(dummy_request)
 
         assert response == dummy_response
+        assert model_id == "cheap-model"
+        assert score == 0.3
         MockClient.assert_called_once()
         assert MockClient.call_args[1]["config"].model == "cheap-model"
 
@@ -95,8 +97,9 @@ async def test_dispatch_picks_mid_tier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        await dispatcher.dispatch(dummy_request)
+        _, model_id, _ = await dispatcher.dispatch(dummy_request)
 
+        assert model_id == "mid-model"
         assert MockClient.call_args[1]["config"].model == "mid-model"
 
 
@@ -111,8 +114,9 @@ async def test_dispatch_picks_smart_tier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        await dispatcher.dispatch(dummy_request)
+        _, model_id, _ = await dispatcher.dispatch(dummy_request)
 
+        assert model_id == "smart-model"
         assert MockClient.call_args[1]["config"].model == "smart-model"
 
 
@@ -130,9 +134,10 @@ async def test_dispatch_upgrades_tier_due_to_context_limit(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        await dispatcher.dispatch(dummy_request)
+        _, model_id, _ = await dispatcher.dispatch(dummy_request)
 
         # Upgrades to 'mid' and then 'mid' also exceeds, so upgrades to 'smart'
+        assert model_id == "smart-model"
         assert MockClient.call_args[1]["config"].model == "smart-model"
 
 
