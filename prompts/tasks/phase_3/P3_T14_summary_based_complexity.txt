@@ -1,0 +1,26 @@
+TASK: P3-T14 — Summary-Based Complexity Scoring
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+In Phase 2, the ML classifier only embeds the final, most recent prompt from the user to determine complexity. This leads to edge cases where a user says "explain further", which scores as "Simple" and gets routed to Llama-3, even if the surrounding chat context is highly complex.
+
+Following the implementation of P3-T13 (Rolling Summarization), update the dispatcher so that it injects the rolling summary context into the complexity classifier. Instead of just embedding `messages[-1]`, the classifier should embed `[Chat Summary] + messages[-1]`. This ensures the ML classifier correctly identifies the true complexity of follow-up questions.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `tests/router/test_dispatcher.py`
+- ONLY touch the two files listed above.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. In `dispatcher.py`, locate the call to `_get_complexity_score(prompt)`.
+2. Update the logic before this call to check if a `Chat Summary` exists in the messages array (implemented in P3_T13).
+3. If a summary exists, concatenate it with the final prompt:
+   `full_context_prompt = f"Context: {summary_content}\n\nUser: {final_prompt_content}"`
+4. Pass `full_context_prompt` into `_get_complexity_score` instead of just the final prompt.
+5. In `test_dispatcher.py`, write a new test `test_dispatcher_uses_summary_for_complexity` that mocks a chat history containing a summary, mocks the ML classifier to assert it receives the concatenated string, and ensures the routing respects the summary.
