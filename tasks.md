@@ -43,6 +43,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [ ] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
+- [ ] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
 ## Phase 4 (v0.4): Developer Tools, Knowledge, & Guardrails

@@ -1,0 +1,38 @@
+TASK: P3-T7 — Enterprise License Manager
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the `LicenseManager` utility for SmartRouter (Phase 3).
+This module will gate Enterprise features (Phase 3 and Phase 5) 
+behind a `SMARTROUTER_LICENSE_KEY` environment variable.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/core/license.py`
+- Target file: `tests/core/test_license.py`
+- `license.py` must define a `LicenseManager` class.
+- The class should read `SMARTROUTER_LICENSE_KEY` from the environment.
+- It must implement a method `def verify_feature(self, feature_name: str) -> bool` that:
+  - Returns `True` if the license key is valid (for now, any non-empty string starting with "SR_ENT_").
+  - Raises a custom `EnterpriseFeatureException` (which you should define in `smartrouter/core/exceptions.py` or within `license.py`) if the key is missing or invalid, printing a helpful upsell message like: "[SmartRouter] <feature_name> is an Enterprise feature. Get a license key at smartrouter.io"
+- ONLY touch `smartrouter/core/license.py` and `tests/core/test_license.py`.
+- Do not modify any existing files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Make `LicenseManager` a singleton or provide a global instance so it can easily be imported and checked by other modules (like the config loader or router) in future tasks.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/core/license.py
+- tests/core/test_license.py
+
+Commit: "jules: implement enterprise license manager"
+Target branch: feature/dev
