@@ -68,3 +68,21 @@ async def test_chat_completions_invalid_payload(async_client: AsyncClient):
     }
     response = await async_client.post("/v1/chat/completions", json=payload)
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_get_usage_report(async_client: AsyncClient):
+    response = await async_client.get("/v1/usage")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["total_requests"] == 0
+    assert data["total_spent_usd"] == 0.0
+    assert data["hypothetical_spent_usd"] == 0.0
+    assert data["total_saved_usd"] == 0.0
+    assert data["shadow_mode_active"] is False
+
+    from smartrouter.api.models import UsageReportResponse
+
+    parsed = UsageReportResponse.model_validate(data)
+    assert parsed.total_requests == 0

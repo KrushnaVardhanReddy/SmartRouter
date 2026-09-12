@@ -58,7 +58,11 @@ class RouterDispatcher:
             tier_config = self.settings.tiers.smart
 
         # 4. JSON Mode Enforcement
-        if request.response_format and request.response_format.type == "json_object" and tier_name == "cheap":
+        if (
+            request.response_format
+            and request.response_format.type == "json_object"
+            and tier_name == "cheap"
+        ):
             logger.info("JSON mode requested. Upgrading from 'cheap' to 'mid' tier.")
             tier_name = "mid"
             tier_config = self.settings.tiers.mid
