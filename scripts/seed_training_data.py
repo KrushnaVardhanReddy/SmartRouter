@@ -99,12 +99,11 @@ def process_dataset(dataset: Any, output_path: str, max_samples: int = 1000) -> 
 
 def main() -> None:
     output_path = "data/training_seed.jsonl"
-    logger.info("Attempting to load 'lmsys/chatbot_arena_conversations'...")
+    logger.info("Attempting to load local parquet dataset...")
     try:
-        dataset = load_dataset(
-            "lmsys/chatbot_arena_conversations", split="train", streaming=True
-        )
-        process_dataset(dataset, output_path)
+        # Load the locally downloaded parquet file
+        dataset = load_dataset("parquet", data_files="data/chatbot_arena.parquet", split="train")
+        process_dataset(dataset, output_path, max_samples=2000)
     except Exception as e:
         logger.warning(f"Could not load the original dataset due to: {e}")
         logger.info(
