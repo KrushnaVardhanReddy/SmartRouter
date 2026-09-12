@@ -1,0 +1,10 @@
+Task: Context Compression
+Goal: Auto-summarize or compress older chat history when it exceeds the lower tier's token limit before forcing an upgrade to a more expensive tier.
+
+Instructions:
+1. In `smartrouter/router/context_guard.py`, create a `compress_context(messages: list[ChatMessage], max_tokens: int) -> list[ChatMessage]` function.
+2. The logic should be: if the messages exceed `max_tokens` (measured using the existing `count_tokens`), preserve the first message (index 0, usually the system prompt) and the most recent 2 user/assistant messages at the end. Remove messages from index 1 onwards iteratively until the total tokens is safely under `max_tokens` (or until only the 3 preserved messages remain).
+3. In `smartrouter/router/dispatcher.py`, modify the Context Guard check step. Before immediately upgrading the tier (e.g. from cheap to mid), first attempt to run `compress_context`.
+4. Run `check_context_limit` on the *compressed* messages. If it now fits, replace `request.messages` with the compressed messages and continue routing with the current cheaper tier.
+5. If even the compressed version exceeds the limit (e.g. because the last 2 messages are massive on their own), then proceed with upgrading to the next tier as it currently does.
+6. Write unit tests for `compress_context` in `tests/router/test_context_guard.py` and ensure all tests pass.

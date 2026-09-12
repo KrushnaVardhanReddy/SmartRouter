@@ -33,7 +33,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 *Goal: Make it stable for production environments and maximize cost savings.*
 
 - [x] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
-- [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
+- [x] **Context Compression:** Auto-summarize older chat history for lower-tier models
 - [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
 - [x] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested

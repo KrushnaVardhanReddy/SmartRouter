@@ -1,0 +1,11 @@
+Task: Phase 2 E2E Testing (No Mocking)
+Goal: Verify the ML classifier and dynamic routing pipeline end-to-end.
+
+Instructions:
+1. Create a new test in `tests/test_api/test_routes.py` called `test_chat_completions_e2e` (or create a new `tests/test_e2e.py` file if you prefer).
+2. Do NOT mock `RouterDispatcher` or `ClassifierEngine`. The real machine learning classifier and real routing logic must execute during this test.
+3. You must use the `respx` library to intercept the outbound HTTP network requests to the LLM providers (e.g., `httpx.AsyncClient` POST requests to the URLs in `settings.tiers`) so that we do not make real network calls or spend real money during tests.
+4. Ensure `respx` returns a valid mock ChatCompletion JSON payload.
+5. Make a request via the FastAPI `TestClient` or `AsyncClient` to our `/v1/chat/completions` endpoint.
+6. Verify that the response succeeds, and that the custom headers (`X-SmartRouter-Model` and `X-SmartRouter-Score`) are correctly calculated and injected by the real dispatcher.
+7. Ensure all existing tests still pass.
