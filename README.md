@@ -26,7 +26,8 @@ When your app sends a prompt, the router instantly analyzes its "complexity".
    - `Score < 0.4` ➡️ Route to `meta-llama/llama-3-8b-instruct` (via OpenRouter) - Cost: ~$0.05 / 1M tokens
    - `0.4 <= Score <= 0.8` ➡️ Route to `openai/gpt-4o-mini` (via OpenRouter) - Cost: ~$0.15 / 1M tokens
    - `Score > 0.8` ➡️ Route to `anthropic/claude-3.5-sonnet` (via OpenRouter) - Cost: ~$3.00 / 1M tokens
-4. **Standardized API:** The router exposes a standard OpenAI-compatible API endpoint. To the developer, it looks exactly like querying `openai.chat.completions.create(...)`, but the router handles the magic behind the scenes.
+4. **Enterprise Guardrails (Optional):** Prompts are checked for PII redaction and jailbreaks before routing.
+5. **Standardized API:** The router exposes a standard OpenAI-compatible API endpoint. To the developer, it looks exactly like querying `openai.chat.completions.create(...)`, but the router handles the magic behind the scenes.
 
 ## Why This is a Great Open-Source Project
 
@@ -36,18 +37,24 @@ When your app sends a prompt, the router instantly analyzes its "complexity".
 
 ## Competitors in the Space
 
-- **RouteLLM (by LMSYS):** Open-source, but primarily focused on evaluation frameworks rather than a drop-in proxy.
-- **Not Diamond & Martian API:** Closed-source, venture-funded startups charging a premium for this exact routing service. 
-- **The Opportunity:** A dead-simple, self-hosted Docker container that "just works" for indie hackers and small startups.
+- **LiteLLM & Portkey:** Great proxies/gateways for unified APIs, but they lack true ML-based dynamic semantic routing based on prompt complexity.
+- **RouteLLM (LMSYS):** Excellent OSS dynamic routing based on human preferences, but it's a Python library, not a standalone production gateway.
+- **Martian:** Highly effective proprietary router, but it is a black-box SaaS (enterprise trust issue).
+- **Amazon Bedrock Intelligent Prompt Routing:** Fully managed enterprise AWS service, but suffers from deep vendor lock-in.
+- **Latitude:** Strong for cost tracking and workflow integration, but less focused on granular ML complexity classification.
+- **Kilo Autoefficient:** Intelligent session-aware router, but heavily specialized for coding tasks.
 
-## Monetization Strategy
+## Monetization Strategy (Open Core)
 
-While the core router is 100% open-source, there are several proven business models for this project:
+SmartRouter follows an **Open Core** model. The core router, classifier, and proxy are 100% open-source (MIT). 
 
-- **Managed Cloud Service (SaaS):** Offer a fully managed, hosted version with guaranteed uptime. Companies change their `base_url` to your endpoint and pay a monthly subscription or a percentage of API savings to avoid hosting and maintaining it themselves.
-- **Enterprise / Pro Features:** Keep the core free, but charge for premium features like advanced analytics dashboards, SSO integration, rate limiting, and team management.
-- **Unified Billing (API Gateway):** Instead of users bringing their own keys, you handle all vendor billing (OpenAI, Groq, Anthropic) behind the scenes, sending users a single monthly invoice and taking a margin on top.
-- **Custom Classifier Training:** Charge large enterprise clients to train highly customized, specialized routing models based exclusively on their internal data traffic.
+We monetize by offering an **Enterprise License Key** (`SMARTROUTER_LICENSE_KEY`) that unlocks premium features within the same Docker image. Large corporations (banks, healthcare) who need compliance and scale can pay for a license to activate:
+- PII Redaction & Jailbreak Blocking
+- Advanced API Key Load Balancing & Retries
+- Semantic Caching
+- Session-Aware & Preference-Based Routing
+
+This creates a sustainable business model without splitting the codebase or forcing complex migrations on users.
 
 ## Development Approach
 
@@ -77,7 +84,7 @@ The AI agent reviews and proposes each spec document first. **Work only begins a
 - **Fastest time-to-v1.** Easier for open-source contributors to understand, fork, and contribute to.
 - **Future path:** If a specific hot path ever becomes a bottleneck, that single component can be rewritten in Go later without rewriting the whole project.
 
-**Stack:** `Python 3.12` · `FastAPI` · `uvicorn` · `httpx (async)` · `scikit-learn` · `sentence-transformers` · `Docker`
+**Stack:** `Python 3.14` · `FastAPI` · `uvicorn` · `httpx (async)` · `scikit-learn` · `sentence-transformers` · `Docker`
 
 ## Contract-Based Development
 
@@ -175,14 +182,14 @@ v1.0+ ──►  SmartRouter Cloud — api.smartrouter.dev
 
 ### Feature Roadmap
 
-| Version | Milestone | Key Features |
+| Phase | Milestone | Key Features |
 |---|---|---|
-| **v0.1** | Proof of Concept | OpenAI-compatible passthrough, `smartrouter.yaml` config, 3 configurable tiers (any `base_url` + model) |
-| **v0.2** | Smart Routing | Complexity classifier (scikit-learn), dynamic tier routing, streaming (`stream: true`), `GET /v1/usage` cost report, `X-SmartRouter-Model` response headers |
-| **v0.3** | Production Ready | Semantic cache, budget circuit breaker, fallback chain (auto-retry on 429), MCP server, Docker image on DockerHub |
-| **v0.4** | Developer Tools | Analytics web dashboard, `/v1/explain` endpoint, `force_model` override, A/B testing mode |
-| **v1.0** | Open Source Launch | `pip install smartrouter`, Python middleware, full docs & quickstart, community classifier retraining pipeline |
-| **v1.0+** | Cloud SaaS | Managed cloud at `api.smartrouter.dev`, unified billing (one invoice), A2A agent registration |
+| **Phase 1 (v0.1)** | Core Setup & Passthrough Proxy | OpenAI-compatible passthrough, `smartrouter.yaml` config, configurable tiers. |
+| **Phase 2 (v0.2)** | Smart Router (Classifier & Context) | Complexity classifier (scikit-learn), dynamic tier routing, streaming, `GET /v1/usage`. |
+| **Phase 3 (v0.3)** | Enterprise Optimization & Resilience | PII Redaction, Jailbreak Blocking, Semantic Caching, Load Balancing, MCP Integration, Enterprise License Manager, Dockerfile. |
+| **Phase 4 (v0.4)** | Developer Tools, Knowledge, & Guardrails | RAG-as-a-Service, OTEL Export, Analytics Dashboard, `force_model`. |
+| **Phase 5 (v0.5)** | Enterprise Competitive Parity | Session-Aware Routing, Preference-Based Routing, Domain-Specific Benchmarking. |
+| **Phase 6 (v1.0)** | Open Source Launch & Distribution | CLI, Profile Bundles, Python Middleware, SSO/Auth Gateway, PyPI. |
 
 ## Context Portability — Local ↔ Cloud
 
