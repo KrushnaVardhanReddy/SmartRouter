@@ -7,6 +7,7 @@ from smartrouter.api.models import (
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatMessage,
+    ResponseFormat,
 )
 from smartrouter.router.dispatcher import RouterDispatcher
 
@@ -134,6 +135,24 @@ async def test_dispatch_upgrades_tier_due_to_context_limit(
 
         # Upgrades to 'mid' and then 'mid' also exceeds, so upgrades to 'smart'
         assert MockClient.call_args[1]["config"].model == "smart-model"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_upgrades_tier_due_to_json_mode(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_classifier.score_prompt.return_value = 0.2  # Initially picks cheap
+    dummy_request.response_format = ResponseFormat(type="json_object")
+
+    with patch("smartrouter.router.dispatcher.RouterClient") as MockClient:
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        await dispatcher.dispatch(dummy_request)
+
+        # Upgrades to 'mid' due to JSON mode
+        assert MockClient.call_args[1]["config"].model == "mid-model"
 
 
 @pytest.mark.asyncio
