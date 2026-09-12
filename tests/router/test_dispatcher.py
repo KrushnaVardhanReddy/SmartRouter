@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
 from smartrouter.api.models import (
@@ -156,3 +157,59 @@ async def test_dispatch_shadow_mode_logging(
         mock_logger.info.assert_any_call(
             "Shadow mode is enabled. Proceeding with standard routing for now."
         )
+
+
+@pytest.mark.asyncio
+async def test_dispatch_fallback_from_smart_to_mid(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_classifier.score_prompt.return_value = 0.9  # >= 0.8, selects smart
+
+    with patch("smartrouter.router.dispatcher.RouterClient") as MockClient:
+        # Create an error mimicking a 500 status code
+        error_response = httpx.Response(
+            500, request=httpx.Request("POST", "http://smart.com")
+        )
+        http_error = httpx.HTTPStatusError(
+            "500 Error", request=error_response.request, response=error_response
+        )
+
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(side_effect=[http_error, dummy_response])
+
+        dispatcher = RouterDispatcher()
+        response = await dispatcher.dispatch(dummy_request)
+
+        assert response == dummy_response
+        assert MockClient.call_count == 2
+        assert MockClient.call_args_list[0][1]["config"].model == "smart-model"
+        assert MockClient.call_args_list[1][1]["config"].model == "mid-model"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_fallback_exhausted(
+    mock_settings, mock_classifier, dummy_request
+):
+    mock_classifier.score_prompt.return_value = 0.9  # >= 0.8, selects smart
+
+    with patch("smartrouter.router.dispatcher.RouterClient") as MockClient:
+        # Create an error mimicking a 500 status code
+        error_response = httpx.Response(
+            500, request=httpx.Request("POST", "http://smart.com")
+        )
+        http_error = httpx.HTTPStatusError(
+            "500 Error", request=error_response.request, response=error_response
+        )
+
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(side_effect=[http_error, http_error, http_error])
+
+        dispatcher = RouterDispatcher()
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await dispatcher.dispatch(dummy_request)
+
+        assert MockClient.call_count == 3
+        assert MockClient.call_args_list[0][1]["config"].model == "smart-model"
+        assert MockClient.call_args_list[1][1]["config"].model == "mid-model"
+        assert MockClient.call_args_list[2][1]["config"].model == "cheap-model"
