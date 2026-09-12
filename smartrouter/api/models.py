@@ -1,6 +1,13 @@
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+
+class RoutingPreference(str, Enum):
+    auto = "auto"
+    frontier_only = "frontier_only"
+    economy = "economy"
 
 
 class ChatMessage(BaseModel):
@@ -21,6 +28,7 @@ class ChatCompletionRequest(BaseModel):
     max_tokens: int | None = Field(default=None)
     stream: bool = Field(default=False)
     response_format: ResponseFormat | None = Field(default=None)
+    routing_preference: RoutingPreference = Field(default=RoutingPreference.auto)
 
 
 class ChatCompletionChoice(BaseModel):
