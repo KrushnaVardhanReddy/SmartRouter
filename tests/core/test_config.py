@@ -8,19 +8,20 @@ def test_tier_config_defaults():
     assert config.api_key is None
     assert config.timeout_seconds == 30
 
+
 def test_tier_config_env_expansion(monkeypatch):
     monkeypatch.setenv("TEST_API_KEY", "super_secret")
     config = TierConfig(
-        base_url="http://test",
-        model="test-model",
-        api_key="${TEST_API_KEY}"
+        base_url="http://test", model="test-model", api_key="${TEST_API_KEY}"
     )
     assert config.api_key == "super_secret"
+
 
 def test_router_config_defaults():
     config = RouterConfig()
     assert config.low_threshold == 0.4
     assert config.high_threshold == 0.8
+
 
 def test_get_settings(monkeypatch, tmp_path):
     monkeypatch.setenv("MY_FAKE_KEY", "12345")
