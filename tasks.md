@@ -24,7 +24,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] (Jules) Implement Dynamic Routing Logic in `router/dispatcher.py` (P2-T4)
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
 - [x] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
-- [/] Add `GET /v1/usage` (cost savings report endpoint)
+- [x] Add `GET /v1/usage` (cost savings report endpoint)
 - [/] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
 - [/] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
