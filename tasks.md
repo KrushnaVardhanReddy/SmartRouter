@@ -42,15 +42,18 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
 - [ ] **E2E Testing:** Verify fallback chains, PII redaction, and circuit breakers (no mocking)
 
-## Phase 4 (v0.4): Developer Tools & Observability
-*Goal: Add visibility, OpenTelemetry, and debugging tools for developers.*
+## Phase 4 (v0.4): Developer Tools, Knowledge, & Guardrails
+*Goal: Add visibility, RAG capabilities, safety guardrails, and debugging tools.*
 
+- [ ] **Toxicity & Guardrails:** Use local model (e.g., Llama-Guard) to block toxic inputs/outputs
+- [ ] **Auto-Few-Shot Prompting:** Dynamically inject similar successful past queries as examples
+- [ ] **RAG-as-a-Service:** Inject context from uploaded documents into the prompt
 - [ ] **OpenTelemetry (OTEL) Export:** Emit traces to Datadog, Langfuse, or Phoenix
 - [ ] Analytics Web Dashboard (simple UI to view routing decisions and cost savings)
 - [ ] `GET /v1/explain` endpoint (returns the chosen model and why)
 - [ ] `force_model` override (via custom headers or prompt injection for testing)
 - [ ] Persistent System Prompt Injection (append/prepend from config)
-- [ ] **E2E Testing:** Verify OTEL traces and dashboard analytics end-to-end
+- [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
 
 ## Phase 5 (v1.0): Open Source Launch & Distribution
 *Goal: Frictionless adoption for the community.*
