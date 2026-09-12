@@ -1,0 +1,75 @@
+TASK: P3-T13 — Rolling Window Summarization (Smart Context Compression)
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Upgrade the existing naive context compression (which silently
+drops old messages) to a proper "rolling window summarization"
+strategy. Instead of discarding old turns, the dispatcher
+must first call a cheap/fast LLM to generate a concise summary
+of the dropped messages, then prepend that summary as a
+synthetic assistant message so the model retains awareness of
+earlier conversation history.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/context_guard.py`
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `tests/router/test_context_guard.py`
+- ONLY touch the three files listed above. Do NOT modify any
+  other files.
+- Write strict Python 3.14 code with type hints.
+- The summarization LLM call must be async.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. In `context_guard.py`, replace the existing `compress_context`
+   function with a new async version:
+
+   `async def compress_context(
+       messages: list[ChatMessage],
+       max_tokens: int,
+       summarizer_base_url: str,
+       summarizer_model: str,
+       summarizer_api_key: str,
+   ) -> list[ChatMessage]`
+
+   Logic:
+   a. Identify the messages to drop: everything between index 1
+      (after system prompt) and index -(N) where N is the number
+      of recent turns to keep (keep last 2 turns = 4 messages).
+   b. If there are messages to drop, build a summarization prompt:
+      "Summarize the following conversation history concisely
+       in 2-3 sentences:\n<dropped messages formatted as text>"
+   c. Make an async HTTP POST to `summarizer_base_url` using
+      `httpx.AsyncClient` with the summarization prompt,
+      `summarizer_model`, and `summarizer_api_key`.
+   d. Receive the summary text from the response.
+   e. Construct the compressed message list:
+      [system_prompt, ChatMessage(role="assistant",
+       content=f"[Context Summary] {summary}"), *last_N_messages]
+   f. If the summarizer call fails for any reason (network error,
+      bad response), fall back to the old naive trim (drop
+      messages without summarizing) and log a warning.
+
+2. In `dispatcher.py`, update the call site for `compress_context`
+   to pass in the summarizer config from settings:
+   - `summarizer_base_url` = `settings.tiers.cheap.base_url`
+   - `summarizer_model` = `settings.tiers.cheap.model`
+   - `summarizer_api_key` = `settings.tiers.cheap.api_key`
+   Because we use the cheap model to generate the summary
+   (maximum cost savings).
+
+3. In `test_context_guard.py`, update existing compress_context
+   tests to be async and to mock the `httpx.AsyncClient` call
+   using `respx` or `unittest.mock.AsyncMock`. Add a new test:
+   - `test_compress_context_summarizes_dropped_messages`: Verify
+     that when messages are dropped, a `[Context Summary]`
+     message is injected at position 1.
+   - `test_compress_context_falls_back_on_summarizer_failure`:
+     Verify that if the summarizer HTTP call fails, the function
+     falls back gracefully to naive trimming without raising.
+
+4. All existing tests must continue to pass.
