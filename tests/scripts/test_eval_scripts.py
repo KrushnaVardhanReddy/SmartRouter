@@ -39,7 +39,20 @@ def test_seed_training_data_process_dataset(tmp_path: pytest.TempPathFactory) ->
         {"instruction": "Dummy instruction"},
     ]
 
-    seed_training_data.process_dataset(dummy_data, test_output_path, max_samples=3)
+    def mock_eval_complexity(prompt: str) -> int:
+        if prompt == "Hello":
+            return 0
+        elif prompt == "Complex stuff":
+            return 1
+        elif prompt == "Dummy instruction":
+            return 0
+        return 1
+
+    with patch(
+        "scripts.seed_training_data.evaluate_complexity_with_llm",
+        side_effect=mock_eval_complexity,
+    ):
+        seed_training_data.process_dataset(dummy_data, test_output_path, max_samples=3)
 
     assert os.path.exists(test_output_path)
 

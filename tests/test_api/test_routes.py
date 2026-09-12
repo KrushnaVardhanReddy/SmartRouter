@@ -73,6 +73,7 @@ async def test_chat_completions_invalid_payload(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_get_usage_report(async_client: AsyncClient):
     from smartrouter.core.usage import usage_tracker
+
     usage_tracker.clear()
     response = await async_client.get("/v1/usage")
     assert response.status_code == 200
@@ -88,11 +89,14 @@ async def test_get_usage_report(async_client: AsyncClient):
 
     parsed = UsageReportResponse.model_validate(data)
     assert parsed.total_requests == 0
+
+
 @pytest.fixture
 def mock_provider_api_keys(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
     monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+
 
 @pytest.mark.asyncio
 async def test_chat_completions_e2e(
@@ -149,6 +153,7 @@ async def test_chat_completions_e2e(
         score = float(score_str)
         assert 0.0 <= score <= 1.0
 
+
 @pytest.mark.asyncio
 async def test_chat_completions_streaming(
     async_client: AsyncClient, mock_provider_api_keys: None
@@ -167,7 +172,9 @@ async def test_chat_completions_streaming(
         yield "data: chunk1\n\n"
         yield "data: chunk2\n\n"
 
-    with patch("smartrouter.router.clients.RouterClient.stream_generate") as mock_stream_generate:
+    with patch(
+        "smartrouter.router.clients.RouterClient.stream_generate"
+    ) as mock_stream_generate:
         mock_stream_generate.return_value = dummy_generator()
 
         with respx.mock(assert_all_called=False, base_url=None) as respx_mock:
@@ -176,10 +183,14 @@ async def test_chat_completions_streaming(
             respx_mock.route(host="huggingface.co").pass_through()
             respx_mock.route(host="test").pass_through()
 
-            response = await async_client.post("/v1/chat/completions", json=request_payload)
+            response = await async_client.post(
+                "/v1/chat/completions", json=request_payload
+            )
 
             assert response.status_code == 200
-            assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+            assert (
+                response.headers["content-type"] == "text/event-stream; charset=utf-8"
+            )
 
             # Verify headers were injected by the real dispatcher
             assert "x-smartrouter-model" in response.headers

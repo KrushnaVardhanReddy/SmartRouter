@@ -128,13 +128,16 @@ class RouterClient(BaseProvider):
 
         payload = request.model_dump(exclude_none=True)
 
-        async with httpx.AsyncClient() as client, client.stream(
-            "POST",
-            self.config.base_url,
-            json=payload,
-            headers=headers,
-            timeout=self.config.timeout_seconds,
-        ) as response:
+        async with (
+            httpx.AsyncClient() as client,
+            client.stream(
+                "POST",
+                self.config.base_url,
+                json=payload,
+                headers=headers,
+                timeout=self.config.timeout_seconds,
+            ) as response,
+        ):
             response.raise_for_status()
             async for chunk in response.aiter_text():
                 yield chunk
