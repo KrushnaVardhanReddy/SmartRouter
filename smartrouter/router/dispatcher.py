@@ -14,7 +14,9 @@ class RouterDispatcher:
         self.settings = get_settings()
         self.classifier = ClassifierEngine()
 
-    async def dispatch(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+    async def dispatch(
+        self, request: ChatCompletionRequest, is_shadow_mode: bool = False
+    ) -> ChatCompletionResponse:
         # 1. Score the prompt (using the last user message)
         prompt_text = ""
         for message in reversed(request.messages):
@@ -56,10 +58,12 @@ class RouterDispatcher:
         logger.info(f"Final selected tier: {tier_name} using model {tier_config.model}")
 
         # Shadow mode
-        if router_config.shadow_mode:
+        if router_config.shadow_mode or is_shadow_mode:
             logger.info(
-                "Shadow mode is enabled. Proceeding with standard routing for now."
+                f"Shadow mode is enabled. Proceeding with standard routing for now. Score {score:.3f} would have routed to {tier_name}."
             )
+            tier_name = "smart"
+            tier_config = self.settings.tiers.smart
 
         # 4. Dispatch using RouterClient
         client = RouterClient(config=tier_config)

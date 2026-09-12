@@ -137,10 +137,11 @@ async def test_dispatch_upgrades_tier_due_to_context_limit(
 
 
 @pytest.mark.asyncio
-async def test_dispatch_shadow_mode_logging(
+async def test_dispatch_shadow_mode_config(
     mock_settings, mock_classifier, dummy_request, dummy_response
 ):
     mock_settings.return_value.router.shadow_mode = True
+    mock_classifier.score_prompt.return_value = 0.2  # Would have been 'cheap'
 
     with (
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
@@ -152,7 +153,34 @@ async def test_dispatch_shadow_mode_logging(
         dispatcher = RouterDispatcher()
         await dispatcher.dispatch(dummy_request)
 
-        # Verify logger was called with shadow mode message
+        # Verify logger was called with shadow mode message showing the original tier
         mock_logger.info.assert_any_call(
-            "Shadow mode is enabled. Proceeding with standard routing for now."
+            "Shadow mode is enabled. Proceeding with standard routing for now. Score 0.200 would have routed to cheap."
         )
+        # Verify it forcefully used smart-model
+        assert MockClient.call_args[1]["config"].model == "smart-model"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_shadow_mode_argument(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    # Ensure config shadow mode is False
+    mock_settings.return_value.router.shadow_mode = False
+    mock_classifier.score_prompt.return_value = 0.5  # Would have been 'mid'
+
+    with (
+        patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
+        patch("smartrouter.router.dispatcher.logger") as mock_logger,
+    ):
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        # Pass is_shadow_mode=True explicitly
+        await dispatcher.dispatch(dummy_request, is_shadow_mode=True)
+
+        mock_logger.info.assert_any_call(
+            "Shadow mode is enabled. Proceeding with standard routing for now. Score 0.500 would have routed to mid."
+        )
+        assert MockClient.call_args[1]["config"].model == "smart-model"
