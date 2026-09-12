@@ -34,6 +34,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 
 - [x] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
 - [x] **Context Compression:** Auto-summarize older chat history for lower-tier models
+- [ ] **Rolling Window Summarization:** Upgrade naive message trimming to call a cheap LLM to summarize dropped messages and inject a `[Context Summary]` message, preserving conversation awareness
 - [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
 - [x] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
