@@ -1,0 +1,53 @@
+TASK: P2-T8 — Streaming Support (SSE Proxying)
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Support the `stream: true` flag in the chat completions API.
+When a client requests streaming, the router should stream the
+Server-Sent Events (SSE) back to the client chunk by chunk
+from the selected LLM provider, rather than blocking until the
+full response is ready.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/clients.py`
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `smartrouter/api/routes.py`
+- Target file: `tests/test_api/test_routes.py`
+- ONLY touch the files listed above. Do NOT modify any other files.
+- Write strict Python 3.14 code with type hints.
+- Use `fastapi.responses.StreamingResponse` for SSE streams.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. In `clients.py`, add a new async method to `RouterClient`:
+   `async def stream_generate(self, request: ChatCompletionRequest) -> AsyncGenerator[str, None]`
+   This method should make a streaming HTTP POST request to the
+   provider using `httpx.AsyncClient().stream(...)` and yield the
+   raw bytes/text chunks exactly as they arrive from the upstream
+   provider.
+
+2. In `dispatcher.py`, update the `dispatch` signature to return
+   either a `ChatCompletionResponse` OR an `AsyncGenerator[str, None]`
+   (you can use a Union or `Any` if typing gets messy, but prefer
+   `ChatCompletionResponse | AsyncGenerator[str, None]`).
+   Inside `dispatch`, if `request.stream` is True, call
+   `client.stream_generate(request)` instead of `client.generate(request)`
+   and return the generator. Note: for streams, you do not need
+   to calculate usage costs immediately.
+
+3. In `routes.py`, update `create_chat_completion`. If the result
+   from `dispatcher.dispatch` is an AsyncGenerator, return a
+   `StreamingResponse(result, media_type="text/event-stream")`.
+   Ensure that the custom headers (`X-SmartRouter-Model`,
+   `X-SmartRouter-Score`) are still attached to the StreamingResponse.
+
+4. In `test_routes.py`, add a test `test_chat_completions_streaming`
+   that mocks `RouterClient.stream_generate` to yield two dummy
+   SSE chunks and verifies that the FastAPI endpoint correctly
+   returns a StreamingResponse with the correct custom headers.
+
+5. All existing tests must continue to pass.
