@@ -25,14 +25,14 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
 - [ ] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
 - [ ] Add `GET /v1/usage` (cost savings report endpoint)
-- [ ] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
-- [ ] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
+- [/] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
+- [/] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
 *Goal: Make it stable for production environments and maximize cost savings.*
 
-- [ ] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
+- [/] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
 - [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
 - [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
@@ -42,7 +42,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
 - [x] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
 - [x] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
-- [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
+- [/] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
 - [ ] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX

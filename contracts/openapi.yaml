@@ -16,6 +16,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ChatCompletionRequest'
+      parameters:
+        - in: header
+          name: X-SmartRouter-Shadow
+          schema:
+            type: boolean
+          required: false
+          description: If true, calculates the routing score and logs it, but always routes to the Smart tier.
       responses:
         '200':
           description: Successful response

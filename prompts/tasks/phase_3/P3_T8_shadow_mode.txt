@@ -1,0 +1,35 @@
+TASK: P3-T8 — Shadow Mode
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement Shadow Mode, which allows enterprise users to safely run SmartRouter in production without it actually intercepting or modifying the routing. It will calculate the score and log the hypothetical savings, but always route to the Smart model (Anthropic).
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target files: `smartrouter/api/routes.py` and `smartrouter/router/dispatcher.py`
+- I have already updated `contracts/openapi.yaml` to include the `X-SmartRouter-Shadow` header (boolean). Update `smartrouter/api/models.py` if necessary to accept this header in the FastAPI route.
+- In `smartrouter/router/dispatcher.py`, check if `X-SmartRouter-Shadow` is True.
+- If Shadow Mode is active:
+  - Run the complexity classifier normally and get the score.
+  - Log the score and what the tier *would* have been.
+  - Force the route to the `smart` tier (highest tier model) regardless of the score.
+- Add unit tests verifying that requests with `X-SmartRouter-Shadow: true` always return the smart model.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- You may need to inject the `X-SmartRouter-Shadow` header into the kwargs passed down from the route to the dispatcher.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/api/routes.py
+- smartrouter/router/dispatcher.py
+- tests/router/test_dispatcher.py
+
+Commit: "jules: implement shadow mode for zero-risk routing"
+Target branch: feature/dev

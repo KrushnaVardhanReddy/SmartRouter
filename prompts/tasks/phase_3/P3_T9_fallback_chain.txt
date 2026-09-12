@@ -1,0 +1,32 @@
+TASK: P3-T9 — Fallback Chain
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement a fallback chain for robustness. If a request is routed to a specific tier (e.g., Anthropic/Smart) but that provider experiences a hard outage (5xx) after all retries are exhausted, the router should automatically fall back to the next available tier (e.g., OpenAI/Mid) to ensure the user gets a response.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- Modify the `route_request` method.
+- Wrap the call to the selected provider's client in a try/except block catching HTTP exceptions or specific provider exceptions.
+- If a permanent failure occurs (after the client's internal retries), attempt the same request on the next tier down (e.g., smart -> mid -> cheap).
+- Do not fallback up (e.g., cheap -> smart) to avoid unexpected costs.
+- Add unit tests mocking a 500 error from the Smart provider and verifying that the Mid provider is called as a fallback.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Create a list mapping `[Tier.SMART, Tier.MID, Tier.CHEAP]` to iterate through fallbacks cleanly.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/router/dispatcher.py
+- tests/router/test_dispatcher.py
+
+Commit: "jules: implement fallback chain for resilient routing"
+Target branch: feature/dev

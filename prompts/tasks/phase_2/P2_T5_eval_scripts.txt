@@ -1,0 +1,38 @@
+TASK: P2-T5 — Eval & Seed Scripts
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create two scripts in the `scripts/` directory to help evaluate and train our complexity classifier.
+1. `seed_training_data.py`: Fetches preference data from the HuggingFace Chatbot Arena dataset to use for initial classifier training.
+2. `eval_classifier.py`: Evaluates our trained Scikit-Learn classifier against a small golden dataset to measure precision, recall, and false positive rates.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Do NOT modify `main.py` or any other existing core files.
+- **Script 1: seed_training_data.py**
+  - Use the `datasets` library to load `lmsys/chatbot_arena_conversations`.
+  - Extract prompts and their "winner_model" (e.g., if a cheap model won, label as low complexity).
+  - Save the extracted prompts to a JSONL file in `data/training_seed.jsonl`.
+- **Script 2: eval_classifier.py**
+  - Load `models/complexity_classifier.pkl` (our scikit-learn model).
+  - Define a small hardcoded dictionary or load a JSON of 50 "golden" prompts with known complexity (cheap vs expensive).
+  - Run the classifier on them and print out a classification report (scikit-learn `classification_report`).
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Make sure to handle missing directories by creating `data/` if it doesn't exist.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- scripts/seed_training_data.py
+- scripts/eval_classifier.py
+- tests/scripts/test_eval_scripts.py
+
+Commit: "jules: add eval and training seed scripts"
+Target branch: feature/dev
