@@ -37,10 +37,12 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
 - [ ] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
-- [ ] Fallback Chain (auto-retry next tier on 429/503 HTTP errors)
+- [ ] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
+- [ ] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
+- [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [ ] MCP Server (`/.well-known/mcp/`) for native agent tool integration
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
-- [ ] **E2E Testing:** Verify fallback chains, PII redaction, and circuit breakers (no mocking)
+- [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
 ## Phase 4 (v0.4): Developer Tools, Knowledge, & Guardrails
 *Goal: Add visibility, RAG capabilities, safety guardrails, and debugging tools.*
