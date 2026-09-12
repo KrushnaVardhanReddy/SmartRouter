@@ -3,6 +3,7 @@ import os
 import httpx
 
 from smartrouter.api.models import ChatCompletionRequest, ChatCompletionResponse
+from smartrouter.core.config import TierConfig
 from smartrouter.router.base_provider import BaseProvider
 
 
@@ -38,5 +39,44 @@ class OpenRouterClient(BaseProvider):
 
             # Note: We expect OpenRouter to return a response that can be parsed
             # into our ChatCompletionResponse model.
+            data = response.json()
+            return ChatCompletionResponse(**data)
+
+
+class RouterClient(BaseProvider):
+    """
+    Dynamic client for routing to different providers based on TierConfig.
+    """
+
+    def __init__(self, config: TierConfig) -> None:
+        self.config = config
+
+    async def generate(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+        """
+        Forward the request to the configured provider.
+        """
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if self.config.api_key:
+            headers["Authorization"] = f"Bearer {self.config.api_key}"
+
+        if "anthropic" in self.config.base_url.lower():
+            headers["anthropic-version"] = "2023-06-01"
+
+        # The router dictates the actual model being used for the backend provider
+        request.model = self.config.model
+
+        payload = request.model_dump(exclude_none=True)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.config.base_url,
+                json=payload,
+                headers=headers,
+                timeout=self.config.timeout_seconds,
+            )
+            response.raise_for_status()
+
             data = response.json()
             return ChatCompletionResponse(**data)

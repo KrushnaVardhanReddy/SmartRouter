@@ -10,6 +10,7 @@ class TierConfig(BaseModel):
     model: str
     api_key: str | None = None
     timeout_seconds: int = 30
+    max_context_tokens: int | None = None
 
     @field_validator("api_key", mode="before")
     @classmethod
@@ -22,6 +23,7 @@ class TierConfig(BaseModel):
 class RouterConfig(BaseModel):
     low_threshold: float = 0.4
     high_threshold: float = 0.8
+    shadow_mode: bool = False
 
 
 class TiersConfig(BaseModel):
