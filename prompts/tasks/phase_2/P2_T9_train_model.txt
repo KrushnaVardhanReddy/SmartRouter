@@ -1,0 +1,24 @@
+TASK: P2-T9 — Train Classifier on 100k Chatbot Arena dataset
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Execute the ML training pipeline using the real, 40MB HuggingFace 
+Chatbot Arena `.parquet` dataset that was just committed to the repo, 
+and commit the resulting compiled model.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Do NOT modify any Python code. The scripts are already ready.
+- You must run the data generation script, train the model, and evaluate it.
+- After training, you MUST commit the `models/complexity_classifier.pkl` file.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. The script `scripts/seed_training_data.py` is currently capped at 2,000 samples for fast local testing. Update it to `max_samples=100000` so we use the entire dataset!
+2. Run `uv run python scripts/seed_training_data.py`. This will load `data/chatbot_arena.parquet` and generate `data/training_seed.jsonl`.
+3. Run `uv run python scripts/train_classifier.py`. This will read the JSONL, generate embeddings, train the Logistic Regression classifier, and output `models/complexity_classifier.pkl`. (Note: Generating embeddings for 100k rows on CPU might take several minutes, please be patient and do not kill the task!)
+4. Run `uv run python scripts/eval_classifier.py` and print the output so we can see the true accuracy on the golden dataset!
+5. `git add models/complexity_classifier.pkl` and push the trained model!
