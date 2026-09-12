@@ -1,3 +1,7 @@
+import httpx
+import pytest
+import respx
+
 from smartrouter.api.models import ChatMessage
 from smartrouter.router.context_guard import (
     check_context_limit,
@@ -49,17 +53,20 @@ def test_check_context_limit_exceeds_limit():
     assert check_context_limit([message], 15) is False
 
 
-def test_compress_context_few_messages():
+@pytest.mark.asyncio
+async def test_compress_context_few_messages():
     messages = [
         ChatMessage(role="system", content="System"),
         ChatMessage(role="user", content="User 1"),
         ChatMessage(role="assistant", content="Assistant 1"),
     ]
-    # No compression should occur because there are <= 3 messages
-    assert compress_context(messages, 0) == messages
+    # No compression should occur because there are <= 5 messages
+    compressed = await compress_context(messages, 0, "http://fake", "model", "key")
+    assert compressed == messages
 
 
-def test_compress_context_within_limit():
+@pytest.mark.asyncio
+async def test_compress_context_within_limit():
     messages = [
         ChatMessage(role="system", content="System"),
         ChatMessage(role="user", content="User 1"),
@@ -67,35 +74,41 @@ def test_compress_context_within_limit():
         ChatMessage(role="user", content="User 2"),
     ]
     # Limit is 1000 tokens, which this easily fits within. No compression.
-    assert compress_context(messages, 1000) == messages
+    compressed = await compress_context(messages, 1000, "http://fake", "model", "key")
+    assert compressed == messages
 
 
-def test_compress_context_exceeds_limit_successful_compression():
+@pytest.mark.asyncio
+async def test_compress_context_exceeds_limit_successful_compression():
     messages = [
-        ChatMessage(role="system", content="System"), # ~ 6 tokens
-        ChatMessage(role="user", content="A very very very very very long message that should be removed"), # ~ 20 tokens
-        ChatMessage(role="assistant", content="Yes"), # ~ 5 tokens
-        ChatMessage(role="user", content="Another long one that should be removed to fit"), # ~ 16 tokens
-        ChatMessage(role="assistant", content="Indeed"), # ~ 6 tokens
-        ChatMessage(role="user", content="Short user"), # ~ 7 tokens
+        ChatMessage(role="system", content="System"), # index 0
+        ChatMessage(role="user", content="A very very very very very long message that should be removed"), # index 1 - dropped
+        ChatMessage(role="assistant", content="Yes"), # index 2 - kept
+        ChatMessage(role="user", content="Another long one that should be removed to fit"), # index 3 - kept
+        ChatMessage(role="assistant", content="Indeed"), # index 4 - kept
+        ChatMessage(role="user", content="Short user"), # index 5 - kept
     ]
-    # Total tokens is about 6 + 20 + 5 + 16 + 6 + 7 = 60.
-    # Set limit to 30.
+    # Total 6 messages.
+    # With new logic, it should drop message at index 1 because we keep last 4.
 
-    compressed = compress_context(messages, 30)
+    with respx.mock(assert_all_called=False) as respx_mock:
+        respx_mock.post("http://fake/chat/completions").respond(
+            json={"choices": [{"message": {"content": "Summary text"}}]}
+        )
+        compressed = await compress_context(messages, 30, "http://fake", "model", "key")
 
-    # Should drop index 1, then index 1 again, until it fits or reaches 3 messages.
-    # We want it to fit.
-    # After dropping 2nd message (20 tokens), total = 40.
-    # After dropping 3rd message ("Yes", 5 tokens), total = 35.
-    # After dropping 4th message (16 tokens), total = 19. Now it fits.
-    assert estimate_token_count(compressed) <= 30
+    # The summary is inserted. Total messages should be:
+    # [system, summary, messages[-4:]] -> length 6
+    assert len(compressed) == 6
     assert compressed[0] == messages[0] # System kept
+    assert compressed[1].content == "[Context Summary] Summary text"
+    assert compressed[2] == messages[-4]
     assert compressed[-1] == messages[-1] # Last user kept
     assert compressed[-2] == messages[-2] # Last assistant kept
 
 
-def test_compress_context_exceeds_limit_unsuccessful_compression():
+@pytest.mark.asyncio
+async def test_compress_context_exceeds_limit_unsuccessful_compression():
     messages = [
         ChatMessage(role="system", content="System"),
         ChatMessage(role="user", content="Old"),
@@ -103,16 +116,87 @@ def test_compress_context_exceeds_limit_unsuccessful_compression():
         ChatMessage(role="user", content="Old"),
         ChatMessage(role="assistant", content="A very very long assistant reply that takes up all the tokens by itself and causes the total limit to still be exceeded even if we drop all older messages." * 10),
         ChatMessage(role="user", content="Short user"),
+        ChatMessage(role="assistant", content="Dummy"),
+        ChatMessage(role="user", content="Dummy"),
     ]
-    # Set a very low limit. The last 2 messages alone exceed this limit.
+    # Need at least 6 messages to trigger dropping.
+    # Set a very low limit. The last 4 messages alone exceed this limit.
     limit = 50
-    compressed = compress_context(messages, limit)
+    with respx.mock(assert_all_called=False) as respx_mock:
+        respx_mock.post("http://fake/chat/completions").respond(
+            json={"choices": [{"message": {"content": "Summary of old stuff"}}]}
+        )
+        compressed = await compress_context(messages, limit, "http://fake", "model", "key")
 
-    # It should compress down to exactly 3 messages, but no further
-    assert len(compressed) == 3
+    # It should compress down to exactly 6 messages now (system, summary, last 4)
+    assert len(compressed) == 6
     assert compressed[0] == messages[0]
-    assert compressed[1] == messages[-2]
-    assert compressed[2] == messages[-1]
+    assert compressed[1].content == "[Context Summary] Summary of old stuff"
+    assert compressed[2] == messages[-4]
+    assert compressed[5] == messages[-1]
 
-    # And it will still exceed the limit
-    assert estimate_token_count(compressed) > limit
+
+@pytest.mark.asyncio
+async def test_compress_context_summarizes_dropped_messages():
+    messages = [
+        ChatMessage(role="system", content="System"),
+        ChatMessage(role="user", content="Drop me 1"),
+        ChatMessage(role="assistant", content="Drop me 2"),
+        ChatMessage(role="user", content="Keep me 1"),
+        ChatMessage(role="assistant", content="Keep me 2"),
+        ChatMessage(role="user", content="Keep me 3"),
+        ChatMessage(role="assistant", content="Keep me 4"),
+    ]
+
+    with respx.mock(assert_all_called=True) as respx_mock:
+        route = respx_mock.post("http://fake/chat/completions").respond(
+            json={"choices": [{"message": {"content": "I am a summary"}}]}
+        )
+        # Limit 0 forces it to drop as much as possible, leaving only system and last 4 messages + summary
+        compressed = await compress_context(messages, 0, "http://fake", "model", "key")
+
+        assert route.called
+        request = route.calls.last.request
+        assert request.headers["Authorization"] == "Bearer key"
+
+        # Checking that the prompt contains the dropped messages
+        payload = request.content.decode("utf-8")
+        assert "Drop me 1" in payload
+        assert "Drop me 2" in payload
+        assert "Keep me 1" not in payload # kept
+        assert "Keep me 2" not in payload # kept
+        assert "Keep me 3" not in payload # kept
+        assert "Keep me 4" not in payload # kept
+
+    assert len(compressed) == 6
+    assert compressed[1].role == "assistant"
+    assert compressed[1].content == "[Context Summary] I am a summary"
+
+
+@pytest.mark.asyncio
+async def test_compress_context_falls_back_on_summarizer_failure():
+    messages = [
+        ChatMessage(role="system", content="System"),
+        ChatMessage(role="user", content="Drop me 1"),
+        ChatMessage(role="assistant", content="Drop me 2"),
+        ChatMessage(role="user", content="Keep me 1"),
+        ChatMessage(role="assistant", content="Keep me 2"),
+        ChatMessage(role="user", content="Keep me 3"),
+        ChatMessage(role="assistant", content="Keep me 4"),
+    ]
+
+    with respx.mock(assert_all_called=True) as respx_mock:
+        route = respx_mock.post("http://fake/chat/completions").mock(
+            side_effect=httpx.RequestError("Network failure")
+        )
+        # Should catch the error and fallback to naive compression (no summary message)
+        compressed = await compress_context(messages, 0, "http://fake", "model", "key")
+
+        assert route.called
+
+    assert len(compressed) == 5
+    assert compressed[0] == messages[0]
+    assert compressed[1] == messages[-4]
+    assert compressed[2] == messages[-3]
+    assert compressed[3] == messages[-2]
+    assert compressed[4] == messages[-1]
