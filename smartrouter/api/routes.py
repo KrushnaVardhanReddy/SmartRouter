@@ -6,6 +6,8 @@ from smartrouter.api.models import (
     ChatCompletionResponse,
     UsageReportResponse,
 )
+from smartrouter.core.config import get_settings
+from smartrouter.core.usage import usage_tracker
 from smartrouter.router.dispatcher import RouterDispatcher
 
 router = APIRouter()
@@ -37,11 +39,11 @@ async def create_chat_completion(
 
 @router.get("/v1/usage", response_model=UsageReportResponse)
 async def get_usage_report() -> UsageReportResponse:
-    # Dummy zero-ed values as instructed for now
+    settings = get_settings()
     return UsageReportResponse(
-        total_requests=0,
-        total_spent_usd=0.0,
-        hypothetical_spent_usd=0.0,
-        total_saved_usd=0.0,
-        shadow_mode_active=False,
+        total_requests=usage_tracker.total_requests,
+        total_spent_usd=usage_tracker.total_spent_usd,
+        hypothetical_spent_usd=usage_tracker.hypothetical_spent_usd,
+        total_saved_usd=usage_tracker.total_saved_usd,
+        shadow_mode_active=settings.router.shadow_mode,
     )

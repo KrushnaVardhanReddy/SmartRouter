@@ -5,6 +5,7 @@ import httpx
 from smartrouter.api.models import ChatCompletionRequest, ChatCompletionResponse
 from smartrouter.classifier.engine import ClassifierEngine
 from smartrouter.core.config import get_settings
+from smartrouter.core.usage import usage_tracker
 from smartrouter.router.clients import RouterClient
 from smartrouter.router.context_guard import check_context_limit, compress_context
 
@@ -28,9 +29,20 @@ class RouterDispatcher:
 
         score = self.classifier.score_prompt(prompt_text)
 
-        # 2. Pick a Tier
+        # 2. Check Budget Circuit Breaker
         router_config = self.settings.router
-        if score < router_config.low_threshold:
+        budget_limit = router_config.budget_limit_usd
+        is_budget_exceeded = budget_limit > 0 and usage_tracker.total_spent_usd >= budget_limit
+
+        # 3. Pick a Tier
+        if is_budget_exceeded:
+            logger.warning(
+                f"Budget limit of ${budget_limit:.2f} exceeded (spent: ${usage_tracker.total_spent_usd:.2f}). "
+                "Forcing cheap tier."
+            )
+            tier_name = "cheap"
+            tier_config = self.settings.tiers.cheap
+        elif score < router_config.low_threshold:
             tier_name = "cheap"
             tier_config = self.settings.tiers.cheap
         elif score < router_config.high_threshold:
@@ -40,9 +52,12 @@ class RouterDispatcher:
             tier_name = "smart"
             tier_config = self.settings.tiers.smart
 
-        logger.info(f"Initial routing score: {score:.3f} -> {tier_name} tier")
+        if not is_budget_exceeded:
+            logger.info(f"Initial routing score: {score:.3f} -> {tier_name} tier")
+        else:
+            logger.info(f"Initial routing score: {score:.3f} but budget exceeded. Forced to {tier_name} tier.")
 
-        # 3. Context Guard Check and Upgrade
+        # 4. Context Guard Check and Upgrade
         if tier_name == "cheap" and tier_config.max_context_tokens is not None and not check_context_limit(
             request.messages, tier_config.max_context_tokens
         ):
@@ -50,10 +65,12 @@ class RouterDispatcher:
             compressed = compress_context(request.messages, tier_config.max_context_tokens)
             if check_context_limit(compressed, tier_config.max_context_tokens):
                 request.messages = compressed
-            else:
+            elif not is_budget_exceeded:
                 logger.info("Even after compression, context limit exceeded for 'cheap' tier. Upgrading to 'mid'.")
                 tier_name = "mid"
                 tier_config = self.settings.tiers.mid
+            else:
+                logger.warning("Context limit exceeded for 'cheap' tier and budget exceeded. Remaining on 'cheap' tier.")
 
         if tier_name == "mid" and tier_config.max_context_tokens is not None and not check_context_limit(
             request.messages, tier_config.max_context_tokens
@@ -62,20 +79,30 @@ class RouterDispatcher:
             compressed = compress_context(request.messages, tier_config.max_context_tokens)
             if check_context_limit(compressed, tier_config.max_context_tokens):
                 request.messages = compressed
-            else:
+            elif not is_budget_exceeded:
                 logger.info("Even after compression, context limit exceeded for 'mid' tier. Upgrading to 'smart'.")
                 tier_name = "smart"
                 tier_config = self.settings.tiers.smart
+            else:
+                logger.warning("Context limit exceeded for 'mid' tier and budget exceeded. Remaining on 'mid' tier.")
 
-        # 4. JSON Mode Enforcement
+        # 5. JSON Mode Enforcement
         if (
             request.response_format
             and request.response_format.type == "json_object"
             and tier_name == "cheap"
+            and not is_budget_exceeded
         ):
             logger.info("JSON mode requested. Upgrading from 'cheap' to 'mid' tier.")
             tier_name = "mid"
             tier_config = self.settings.tiers.mid
+        elif (
+            request.response_format
+            and request.response_format.type == "json_object"
+            and tier_name == "cheap"
+            and is_budget_exceeded
+        ):
+            logger.warning("JSON mode requested, but budget is exceeded. Remaining on 'cheap' tier and hoping for the best.")
 
         logger.info(f"Final selected tier: {tier_name} using model {tier_config.model}")
 
@@ -88,7 +115,7 @@ class RouterDispatcher:
             tier_name = "smart"
             tier_config = self.settings.tiers.smart
 
-        # 4. Dispatch using RouterClient with Fallback Chain
+        # 6. Dispatch using RouterClient with Fallback Chain
         fallback_chains = {
             "smart": ["smart", "mid", "cheap"],
             "mid": ["mid", "cheap"],
@@ -105,6 +132,13 @@ class RouterDispatcher:
             try:
                 logger.info(f"Attempting dispatch with tier: {current_tier}")
                 response = await client.generate(request)
+
+                # Estimate cost based on tier
+                cost_map = {"cheap": 0.001, "mid": 0.005, "smart": 0.02}
+                actual_cost = cost_map.get(current_tier, 0.0)
+                hypothetical_cost = cost_map["smart"]
+                usage_tracker.record_usage(actual_cost, hypothetical_cost)
+
                 return response, current_config.model, score
             except httpx.HTTPStatusError as e:
                 status_code = e.response.status_code

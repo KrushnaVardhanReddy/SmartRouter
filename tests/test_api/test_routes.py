@@ -72,6 +72,8 @@ async def test_chat_completions_invalid_payload(async_client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_usage_report(async_client: AsyncClient):
+    from smartrouter.core.usage import usage_tracker
+    usage_tracker.clear()
     response = await async_client.get("/v1/usage")
     assert response.status_code == 200
 

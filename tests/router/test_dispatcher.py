@@ -20,6 +20,7 @@ def mock_settings():
         settings.router.low_threshold = 0.4
         settings.router.high_threshold = 0.8
         settings.router.shadow_mode = False
+        settings.router.budget_limit_usd = 0.0
 
         settings.tiers.cheap.model = "cheap-model"
         settings.tiers.cheap.base_url = "http://cheap.com"
@@ -244,3 +245,46 @@ async def test_dispatch_fallback_exhausted(
         assert MockClient.call_args_list[0][1]["config"].model == "smart-model"
         assert MockClient.call_args_list[1][1]["config"].model == "mid-model"
         assert MockClient.call_args_list[2][1]["config"].model == "cheap-model"
+
+@pytest.mark.asyncio
+async def test_dispatch_budget_circuit_breaker(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_settings.return_value.router.budget_limit_usd = 10.0
+    mock_classifier.score_prompt.return_value = 0.9  # Normally selects smart tier
+
+    with (
+        patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
+        patch("smartrouter.router.dispatcher.usage_tracker") as mock_usage_tracker,
+    ):
+        mock_usage_tracker.total_spent_usd = 15.0 # Exceeds budget
+
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        response, model_id, score = await dispatcher.dispatch(dummy_request)
+
+        assert response == dummy_response
+        assert model_id == "cheap-model" # Forced to cheap
+        assert score == 0.9
+        MockClient.assert_called_once()
+        assert MockClient.call_args[1]["config"].model == "cheap-model"
+
+@pytest.mark.asyncio
+async def test_cost_recorded_after_dispatch(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_classifier.score_prompt.return_value = 0.9  # Selects smart tier
+
+    with (
+        patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
+        patch("smartrouter.router.dispatcher.usage_tracker") as mock_usage_tracker,
+    ):
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        await dispatcher.dispatch(dummy_request)
+
+        mock_usage_tracker.record_usage.assert_called_once_with(0.02, 0.02)
