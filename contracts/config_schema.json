@@ -29,6 +29,13 @@
         "jailbreak_blocking": {
           "type": "boolean",
           "default": false
+        },
+        "semantic_caching": {
+          "type": "boolean",
+          "default": false
+        },
+        "mcp_server_url": {
+          "type": "string"
         }
       },
       "required": ["low_threshold", "high_threshold"]

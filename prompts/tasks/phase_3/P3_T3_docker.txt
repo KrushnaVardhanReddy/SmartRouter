@@ -1,0 +1,35 @@
+TASK: P3-T3 — Multi-Stage Dockerfile
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the Dockerization for SmartRouter (Phase 3).
+Create a `Dockerfile` in the root directory that is optimized
+for ML dependencies, using a multi-stage build.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `Dockerfile`
+- Target file: `.dockerignore`
+- The `Dockerfile` must be a multi-stage build:
+  1. `builder` stage: Use `python:3.14-slim`, install `uv`, and install all dependencies into a virtual environment.
+  2. `runtime` stage: Copy the virtual environment and source code, expose port 8000, and run the FastAPI app using `uvicorn smartrouter.main:app --host 0.0.0.0 --port 8000`.
+- ONLY touch `Dockerfile` and `.dockerignore`.
+- Do not modify any existing Python files.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Ensure `.dockerignore` excludes `__pycache__`, `.venv`, `.git`, and `models/*.pkl`.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- Dockerfile
+- .dockerignore
+
+Commit: "jules: create multi-stage dockerfile for deployment"
+Target branch: feature/dev

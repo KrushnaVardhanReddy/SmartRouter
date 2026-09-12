@@ -1,0 +1,38 @@
+TASK: P3-T2 — Semantic Caching
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the Semantic Caching module for SmartRouter (Phase 3).
+Create a `SemanticCache` class that uses embeddings to detect
+duplicate or highly similar prompts and return cached responses.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/cache/semantic.py`
+- Target file: `tests/cache/test_semantic.py`
+- `semantic.py` must define a `SemanticCache` class with two async methods:
+  1. `async def get_cached_response(self, query_embedding: list[float], threshold: float = 0.95) -> str | None`
+  2. `async def add_to_cache(self, query_embedding: list[float], response: str) -> None`
+- The class should use `faiss` or a mock equivalent to store embeddings of past queries and their responses.
+- For the purpose of this task, you can mock the FAISS dependency if it's not installed, but write the logic as if you are maintaining a local in-memory store of vectors and calculating cosine similarity.
+- ONLY touch `smartrouter/cache/semantic.py` and `tests/cache/test_semantic.py`.
+- Do not modify any existing files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- You can use a simple list of dictionaries to store embeddings if FAISS is too heavy to install in the test environment, but try to architect it so FAISS could be easily slotted in.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/cache/semantic.py
+- tests/cache/test_semantic.py
+
+Commit: "jules: implement semantic caching engine"
+Target branch: feature/dev

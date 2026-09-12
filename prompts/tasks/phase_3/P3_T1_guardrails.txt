@@ -1,0 +1,37 @@
+TASK: P3-T1 — Guardrails (PII Redaction & Jailbreak Blocking)
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the Guardrails module for SmartRouter (Phase 3).
+Create a `GuardrailsManager` class to redact PII (using Presidio)
+and block prompt injections/jailbreaks.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/guardrails.py`
+- Target file: `tests/router/test_guardrails.py`
+- `guardrails.py` must define a `GuardrailsManager` class with two async methods:
+  1. `async def redact_pii(self, text: str) -> str`: Use the `presidio_analyzer` and `presidio_anonymizer` libraries to detect and mask PII (like emails, phone numbers). If the libraries are not installed, raise an ImportError with a helpful message. Mock the actual usage if necessary for tests, but write the real implementation.
+  2. `async def check_jailbreak(self, text: str) -> bool`: Return True if the text contains common jailbreak phrases (e.g., "ignore all previous instructions", "system prompt", "bypass").
+- ONLY touch `smartrouter/router/guardrails.py` and `tests/router/test_guardrails.py`.
+- Do not modify any existing files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- For testing `redact_pii`, mock the Presidio engine so it doesn't fail if the dependency isn't present in the CI environment.
+- For `check_jailbreak`, use a simple list of lowercase keywords/phrases to match against the lowercase prompt.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/router/guardrails.py
+- tests/router/test_guardrails.py
+
+Commit: "jules: implement guardrails manager for PII and jailbreaks"
+Target branch: feature/dev
