@@ -11,15 +11,16 @@ Usage:
   python3 scripts/jules_submit.py --branch feature/dev  # Target a specific branch
 """
 
-import json
-import urllib.request
-import sys
-import os
 import glob
+import json
+import os
+import sys
+import urllib.request
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Config — loads API key from .env.local or .env (never hardcode secrets)
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _load_api_key():
     """Read JULES_API_KEY from environment, .env.local, or .env."""
@@ -38,8 +39,9 @@ def _load_api_key():
     print("❌ JULES_API_KEY not found in environment, .env.local, or .env")
     sys.exit(1)
 
-API_KEY  = _load_api_key()
-API_URL  = "https://jules.googleapis.com/v1alpha/sessions"
+
+API_KEY = _load_api_key()
+API_URL = "https://jules.googleapis.com/v1alpha/sessions"
 
 # ── Repo root (one level up from scripts/) ────────────────────────────────────
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -114,68 +116,73 @@ Critical routing rules:
 
 TASKS_DIR = os.path.join(REPO_ROOT, "prompts", "tasks")
 
+
 def _find_task_file(task_id: str) -> str:
     """Find a prompt file matching e.g. 'P1-T1' → prompts/tasks/**/P1_T1_*.txt"""
     normalized = task_id.replace("-", "_").upper()
-    
+
     # Search recursively in subdirectories
     pattern = os.path.join(TASKS_DIR, "**", f"{normalized}_*.txt")
     matches = glob.glob(pattern, recursive=True)
-    
+
     if not matches:
         # Fallback: exact filename match in any subdirectory
         exact_pattern = os.path.join(TASKS_DIR, "**", f"{normalized}.txt")
         exact_matches = glob.glob(exact_pattern, recursive=True)
         if exact_matches:
             return exact_matches[0]
-            
+
         # Try finding if user passed the exact filename minus extension
         file_pattern = os.path.join(TASKS_DIR, "**", f"{task_id}.txt")
         file_matches = glob.glob(file_pattern, recursive=True)
         if file_matches:
             return file_matches[0]
-            
-        print(f"❌ No prompt file found for task '{task_id}' in {TASKS_DIR}/ (including subfolders)")
+
+        print(
+            f"❌ No prompt file found for task '{task_id}' in {TASKS_DIR}/ (including subfolders)"
+        )
         print(f"   Expected pattern: {normalized}_<slug>.txt")
         sys.exit(1)
-        
+
     if len(matches) > 1:
         print(f"⚠️  Multiple files found for '{task_id}': {matches}")
         print(f"   Using: {matches[0]}")
     return matches[0]
+
 
 def _find_phase_files(phase_num: int) -> list:
     """Find all prompt files for a given phase, sorted by task number."""
     pattern = os.path.join(TASKS_DIR, "**", f"P{phase_num}_T*.txt")
     matches = sorted(glob.glob(pattern, recursive=True))
     if not matches:
-        print(f"❌ No prompt files found for Phase {phase_num} in {TASKS_DIR}/ (including subfolders)")
+        print(
+            f"❌ No prompt files found for Phase {phase_num} in {TASKS_DIR}/ (including subfolders)"
+        )
         sys.exit(1)
     return matches
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Submission logic
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def submit_prompt(full_prompt: str, task_name: str = "Task"):
-    payload = json.dumps({
-        "prompt": full_prompt,
-        "sourceContext": {
-            "source": REPO_SOURCE,
-            "githubRepoContext": {
-                "startingBranch": BRANCH
-            }
+    payload = json.dumps(
+        {
+            "prompt": full_prompt,
+            "sourceContext": {
+                "source": REPO_SOURCE,
+                "githubRepoContext": {"startingBranch": BRANCH},
+            },
         }
-    }).encode()
+    ).encode()
 
     req = urllib.request.Request(
         API_URL,
         data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": API_KEY
-        },
-        method="POST"
+        headers={"Content-Type": "application/json", "x-goog-api-key": API_KEY},
+        method="POST",
     )
 
     print(f"🚀 Submitting: {task_name} → branch: {BRANCH}")
@@ -190,7 +197,8 @@ def submit_prompt(full_prompt: str, task_name: str = "Task"):
         print(f"❌ HTTP {e.code}: {e.read().decode()}")
         sys.exit(1)
 
-def submit_file(filepath: str, label: str = None):
+
+def submit_file(filepath: str, label: str | None = None):
     if not os.path.exists(filepath):
         print(f"❌ File not found: {filepath}")
         sys.exit(1)
@@ -199,6 +207,7 @@ def submit_file(filepath: str, label: str = None):
     full_prompt = SAFETY_RULES + "\n\n---\n\n" + prompt_content
     name = label or os.path.basename(filepath)
     submit_prompt(full_prompt, task_name=name)
+
 
 def list_tasks():
     """Print all available task prompt files."""
@@ -215,9 +224,11 @@ def list_tasks():
         print(f"   {basename}")
     print()
 
+
 # ──────────────────────────────────────────────────────────────────────────────
 # CLI entry point
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def main():
     args = sys.argv[1:]
@@ -261,6 +272,7 @@ def main():
         sys.exit(0)
 
     print(__doc__)
+
 
 if __name__ == "__main__":
     main()
