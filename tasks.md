@@ -39,6 +39,8 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
 - [x] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
+- [ ] **Context-Aware Capacity Routing:** Use token count as a primary routing signal alongside complexity score — probe each tier's token limit locally before dispatching, and cascade through tiers until one can handle the request
+- [ ] **`routing_preference` Flag (Force Frontier / Economy):** Per-request field (`frontier_only` | `economy` | `auto`) to pin routing to a specific tier class, bypassing the ML classifier entirely
 - [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
 - [x] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
 - [x] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
@@ -59,6 +61,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Analytics Web Dashboard (simple UI to view routing decisions and cost savings)
 - [ ] `GET /v1/explain` endpoint (returns the chosen model and why)
 - [ ] `force_model` override (via custom headers or prompt injection for testing)
+- [ ] **Per-Client Routing Policy:** Set default `routing_preference` at the API key level (e.g., enterprise clients always get `frontier_only`) rather than requiring per-request overrides
 - [ ] Persistent System Prompt Injection (append/prepend from config)
 - [ ] **Feedback Loop (`POST /v1/feedback`):** Endpoint to flag bad routing decisions for future classifier retraining
 - [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
