@@ -1,0 +1,35 @@
+TASK: P2-T1 — Config Parser with Pydantic Settings
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create the configuration loader that parses the YAML config defining our
+thresholds and tier backends, mapping it to a type-safe Pydantic model.
+This is completely independent of the FastAPI routes.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/core/config.py`
+- Read `contracts/config_schema.json` to understand the expected shape of the YAML file.
+- Use `pydantic-settings` to load configuration. We want to load from a local `smartrouter.yaml` file by default (use `pyyaml` standard library or `PyYAML` dependency if needed).
+- Define `TierConfig` (base_url, model, api_key, timeout_seconds).
+- Define `RouterConfig` (low_threshold, high_threshold).
+- Define the main `Settings` class that composes them.
+- Ensure any `api_key` containing `${VAR}` is automatically expanded from `os.environ` (e.g. `${OPENROUTER_API_KEY}`).
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- You will need a simple `PyYAML` loader to read `smartrouter.yaml` and pass the dict into your Pydantic `Settings` model.
+- Provide a `get_settings()` function with `functools.lru_cache` so we don't re-read the file on every request.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/core/config.py
+
+Commit: "jules: implement type-safe yaml config loader"
+Target branch: feature/dev

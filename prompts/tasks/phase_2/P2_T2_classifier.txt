@@ -1,0 +1,37 @@
+TASK: P2-T2 — Complexity Classifier Engine & Training Script
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the ML engine that reads a text prompt, embeds it using
+`sentence-transformers`, and predicts a complexity score (0.0 to 1.0)
+using a `scikit-learn` LogisticRegression model. Also, write a standalone
+script to train and save a dummy classifier.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/classifier/engine.py`
+- Target file: `scripts/train_classifier.py`
+- `engine.py` must define a `ClassifierEngine` class with a `score_prompt(text: str) -> float` method.
+- The engine must load a trained model from `models/complexity_classifier.pkl`.
+- `train_classifier.py` must generate 50 dummy "simple" sentences and 50 dummy "complex" sentences, embed them, train a `LogisticRegression` model, and save it to `models/complexity_classifier.pkl` using `joblib`.
+- Handle cases gracefully (e.g. if `.pkl` file is missing, return a default score of 0.5).
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Use `all-MiniLM-L6-v2` as the default `SentenceTransformer` model because it's tiny and fast.
+- Run `train_classifier.py` once during your task so the `.pkl` file gets created and you can write a passing unit test if you want, but DO NOT commit the `.pkl` file (it should be in `.gitignore`).
+- Ensure it is completely decoupled from FastAPI.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/classifier/engine.py
+- scripts/train_classifier.py
+
+Commit: "jules: implement classifier engine and training script"
+Target branch: feature/dev
