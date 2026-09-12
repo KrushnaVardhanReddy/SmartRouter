@@ -38,7 +38,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
 - [x] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
 - [x] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
-- [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
+- [x] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [ ] **Context-Aware Capacity Routing:** Use token count as a primary routing signal alongside complexity score — probe each tier's token limit locally before dispatching, and cascade through tiers until one can handle the request
 - [ ] **`routing_preference` Flag (Force Frontier / Economy):** Per-request field (`frontier_only` | `economy` | `auto`) to pin routing to a specific tier class, bypassing the ML classifier entirely
 - [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
