@@ -162,10 +162,10 @@ async def test_dispatch_upgrades_tier_due_to_json_mode(
 
 
 @pytest.mark.asyncio
-async def test_dispatch_shadow_mode_logging(
+async def test_dispatch_shadow_mode_forces_smart_tier(
     mock_settings, mock_classifier, dummy_request, dummy_response
 ):
-    mock_settings.return_value.router.shadow_mode = True
+    mock_classifier.score_prompt.return_value = 0.2  # Normally cheap tier
 
     with (
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
@@ -175,11 +175,17 @@ async def test_dispatch_shadow_mode_logging(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        await dispatcher.dispatch(dummy_request)
+        response, model_id, score = await dispatcher.dispatch(dummy_request, shadow_mode=True)
 
-        # Verify logger was called with shadow mode message
+        assert response == dummy_response
+        assert model_id == "smart-model"
+        assert score == 0.2
+        MockClient.assert_called_once()
+        assert MockClient.call_args[1]["config"].model == "smart-model"
+
+        # Verify logger was called with the correct hypothetical routing message
         mock_logger.info.assert_any_call(
-            "Shadow mode is enabled. Proceeding with standard routing for now."
+            "Shadow mode is enabled. Score 0.200 would have routed to cheap tier. Forcing route to smart tier."
         )
 
 
@@ -202,7 +208,7 @@ async def test_dispatch_fallback_from_smart_to_mid(
         instance.generate = AsyncMock(side_effect=[http_error, dummy_response])
 
         dispatcher = RouterDispatcher()
-        response, model, score = await dispatcher.dispatch(dummy_request)
+        response, model, _ = await dispatcher.dispatch(dummy_request)
 
         assert response == dummy_response
         assert model == "mid-model"
