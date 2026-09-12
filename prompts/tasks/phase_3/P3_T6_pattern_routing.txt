@@ -1,0 +1,37 @@
+TASK: P3-T6 — Pattern-Based Routing
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement Pattern-Based Routing for SmartRouter (Phase 3).
+Create a `PatternRouter` class that checks prompts against
+user-configurable regex/keywords to force-route to local nano models.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/patterns.py`
+- Target file: `tests/router/test_patterns.py`
+- `patterns.py` must define a `PatternRouter` class.
+- The class should have a method `def is_nano_task(self, text: str) -> bool`.
+- It should match the text against a list of keywords (e.g., "git", "bash", "ls", "cd") or regex patterns (e.g., `^how to use .* in bash$`).
+- If a match is found, return `True` (indicating it should be routed to a local nano model). Otherwise, return `False`.
+- ONLY touch `smartrouter/router/patterns.py` and `tests/router/test_patterns.py`.
+- Do not modify any existing files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Make the keywords and regexes configurable via class initialization, providing a sensible default list for OS and git commands.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/router/patterns.py
+- tests/router/test_patterns.py
+
+Commit: "jules: implement pattern-based routing for local nano models"
+Target branch: feature/dev

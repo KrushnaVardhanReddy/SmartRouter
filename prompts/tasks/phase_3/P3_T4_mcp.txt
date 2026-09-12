@@ -1,0 +1,37 @@
+TASK: P3-T4 — MCP Integration (osmcp)
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement the Model Context Protocol (MCP) Client for SmartRouter (Phase 3).
+This module will connect to `osmcp` to provide OS/Git capabilities
+to local nano models.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/mcp/client.py`
+- Target file: `tests/mcp/test_client.py`
+- `client.py` must define an `MCPClient` class.
+- The class should have an `async def fetch_tools(self, server_url: str) -> list[dict]` method that makes a dummy request to the specified MCP server URL to retrieve a list of JSON-schema tools.
+- The class should have an `async def execute_tool(self, server_url: str, tool_name: str, arguments: dict) -> dict` method.
+- Use `httpx.AsyncClient` to mock the HTTP requests for now, returning dummy responses if the URL is not reachable.
+- ONLY touch `smartrouter/mcp/client.py` and `tests/mcp/test_client.py`.
+- Do not modify any existing files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- For tests, mock the `httpx.AsyncClient` using `respx` to return a list of dummy tools (like `grep`, `git_status`).
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/mcp/client.py
+- tests/mcp/test_client.py
+
+Commit: "jules: implement MCP client for osmcp integration"
+Target branch: feature/dev

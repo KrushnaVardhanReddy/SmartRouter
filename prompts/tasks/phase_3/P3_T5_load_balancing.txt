@@ -1,0 +1,38 @@
+TASK: P3-T5 — Load Balancing & Advanced Retries
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement API Key Load Balancing and Exponential Backoff Retries
+in the OpenRouterClient (Phase 3).
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/clients.py`
+- Target file: `tests/router/test_clients.py`
+- Modify `OpenRouterClient` in `clients.py` to support load balancing:
+  - It should accept a list of API keys.
+  - Implement a round-robin mechanism to select the next key for each request.
+- Modify `OpenRouterClient` to support exponential backoff retries:
+  - If a request fails with HTTP 429 or 5xx, it should retry automatically up to 3 times, with exponential backoff (e.g., 1s, 2s, 4s).
+  - Use a library like `tenacity` or write custom async retry logic.
+- ONLY touch `smartrouter/router/clients.py` and `tests/router/test_clients.py`.
+- Do not modify any other files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Update `test_clients.py` to assert that the retries occur correctly when a 429 is raised, and that API keys are cycled correctly in round-robin fashion.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO EDIT:
+- smartrouter/router/clients.py
+- tests/router/test_clients.py
+
+Commit: "jules: implement load balancing and retries in clients"
+Target branch: feature/dev
