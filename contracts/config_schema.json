@@ -65,6 +65,11 @@
           "items": { "type": "string" },
           "description": "List of API keys for round-robin load balancing across multiple keys."
         },
+        "cost_per_1k_tokens": {
+          "type": "number",
+          "default": 0.0,
+          "description": "Cost per 1k tokens for this tier, used for usage tracking."
+        },
         "timeout_seconds": {
           "type": "integer",
           "default": 30,

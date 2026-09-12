@@ -10,6 +10,7 @@ class TierConfig(BaseModel):
     model: str
     api_key: str | None = None
     timeout_seconds: int = 30
+    cost_per_1k_tokens: float = 0.0
     max_context_tokens: int | None = None
 
     @field_validator("api_key", mode="before")
