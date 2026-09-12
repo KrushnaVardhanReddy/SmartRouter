@@ -58,11 +58,28 @@ class RouterDispatcher:
             logger.info(f"Initial routing score: {score:.3f} but budget exceeded. Forced to {tier_name} tier.")
 
         # 4. Context Guard Check and Upgrade
+        summarizer_config = self.settings.tiers.cheap
+
+        # safely extract the string from SecretStr if needed
+        api_key_raw = summarizer_config.api_key
+        summarizer_api_key_str: str = ""
+        if api_key_raw is not None:
+            if hasattr(api_key_raw, "get_secret_value"):
+                summarizer_api_key_str = api_key_raw.get_secret_value()
+            else:
+                summarizer_api_key_str = str(api_key_raw)
+
         if tier_name == "cheap" and tier_config.max_context_tokens is not None and not check_context_limit(
             request.messages, tier_config.max_context_tokens
         ):
             logger.info("Context limit exceeded for 'cheap' tier. Attempting to compress context.")
-            compressed = compress_context(request.messages, tier_config.max_context_tokens)
+            compressed = await compress_context(
+                request.messages,
+                tier_config.max_context_tokens,
+                summarizer_config.base_url,
+                summarizer_config.model,
+                summarizer_api_key_str,
+            )
             if check_context_limit(compressed, tier_config.max_context_tokens):
                 request.messages = compressed
             elif not is_budget_exceeded:
@@ -76,7 +93,13 @@ class RouterDispatcher:
             request.messages, tier_config.max_context_tokens
         ):
             logger.info("Context limit exceeded for 'mid' tier. Attempting to compress context.")
-            compressed = compress_context(request.messages, tier_config.max_context_tokens)
+            compressed = await compress_context(
+                request.messages,
+                tier_config.max_context_tokens,
+                summarizer_config.base_url,
+                summarizer_config.model,
+                summarizer_api_key_str,
+            )
             if check_context_limit(compressed, tier_config.max_context_tokens):
                 request.messages = compressed
             elif not is_budget_exceeded:
