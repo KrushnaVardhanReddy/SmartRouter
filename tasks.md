@@ -25,6 +25,8 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
 - [ ] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
 - [ ] Add `GET /v1/usage` (cost savings report endpoint)
+- [ ] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
+- [ ] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
@@ -43,6 +45,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
+- [ ] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX
 - [/] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
@@ -57,6 +60,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] `GET /v1/explain` endpoint (returns the chosen model and why)
 - [ ] `force_model` override (via custom headers or prompt injection for testing)
 - [ ] Persistent System Prompt Injection (append/prepend from config)
+- [ ] **Feedback Loop (`POST /v1/feedback`):** Endpoint to flag bad routing decisions for future classifier retraining
 - [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
 
 ## Phase 5 (v0.5): Enterprise Competitive Parity
@@ -74,4 +78,6 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Python Middleware implementation (drop into existing FastAPI apps)
 - [ ] Documentation, Quickstart Guide, and PyPI distribution
 - [ ] SSO / Auth Gateway integration (API keys mapping to users)
+- [ ] **`smartrouter explain` CLI:** Subcommand to debug routing decisions transparently against a prompt
+- [ ] **Community Classifier Registry:** Hub to upload and download domain-optimized `.pkl` classifier models
 - [ ] **E2E Testing:** Verify CLI and Docker deployments operate successfully in a clean environment
