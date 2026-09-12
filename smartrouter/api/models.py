@@ -8,6 +8,10 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class ResponseFormat(BaseModel):
+    type: Literal["text", "json_object"] = Field(default="text")
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(
         default=None, description="ID of the model to use. SmartRouter intercepts this."
@@ -16,6 +20,7 @@ class ChatCompletionRequest(BaseModel):
     temperature: float = Field(default=1.0)
     max_tokens: int | None = Field(default=None)
     stream: bool = Field(default=False)
+    response_format: ResponseFormat | None = Field(default=None)
 
 
 class ChatCompletionChoice(BaseModel):
