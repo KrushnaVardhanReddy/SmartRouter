@@ -27,9 +27,11 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Add `GET /v1/usage` (cost savings report endpoint)
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
-## Phase 3 (v0.3): Production Resilience
-*Goal: Make it stable for production environments and agentic ecosystems.*
+## Phase 3 (v0.3): Enterprise Optimization & Resilience
+*Goal: Make it stable for production environments and maximize cost savings.*
 
+- [ ] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
+- [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
 - [ ] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [ ] Fallback Chain (auto-retry next tier on 429/503 HTTP errors)
