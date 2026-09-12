@@ -1,5 +1,8 @@
+from collections.abc import AsyncGenerator
+
 import httpx
 from fastapi import APIRouter, Header, HTTPException, Response
+from fastapi.responses import StreamingResponse
 
 from smartrouter.api.models import (
     ChatCompletionRequest,
@@ -13,12 +16,12 @@ from smartrouter.router.dispatcher import RouterDispatcher
 router = APIRouter()
 
 
-@router.post("/v1/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/v1/chat/completions", response_model=None)
 async def create_chat_completion(
     request: ChatCompletionRequest,
     response: Response,
     x_smartrouter_shadow: bool = Header(default=False),
-) -> ChatCompletionResponse:
+) -> ChatCompletionResponse | StreamingResponse:
     try:
         dispatcher = RouterDispatcher()
     except Exception as e:
@@ -26,6 +29,15 @@ async def create_chat_completion(
 
     try:
         completion_response, model_id, score = await dispatcher.dispatch(request, shadow_mode=x_smartrouter_shadow)
+        if isinstance(completion_response, AsyncGenerator):
+            headers = {
+                "X-SmartRouter-Model": model_id,
+                "X-SmartRouter-Score": f"{score:.3f}",
+            }
+            return StreamingResponse(
+                completion_response, media_type="text/event-stream", headers=headers
+            )
+
         response.headers["X-SmartRouter-Model"] = model_id
         response.headers["X-SmartRouter-Score"] = f"{score:.3f}"
         return completion_response

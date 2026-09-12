@@ -1,4 +1,5 @@
 import logging
+from collections.abc import AsyncGenerator
 
 import httpx
 
@@ -26,7 +27,7 @@ class RouterDispatcher:
 
     async def dispatch(
         self, request: ChatCompletionRequest, shadow_mode: bool = False
-    ) -> tuple[ChatCompletionResponse, str, float]:
+    ) -> tuple[ChatCompletionResponse | AsyncGenerator[str], str, float]:
         router_config = self.settings.router
         score = 0.0
 
@@ -180,15 +181,19 @@ class RouterDispatcher:
 
             try:
                 logger.info(f"Attempting dispatch with tier: {current_tier}")
-                response = await client.generate(request)
+                if request.stream:
+                    response_gen = client.stream_generate(request)
+                    return response_gen, current_config.model, score
+                else:
+                    response = await client.generate(request)
 
-                # Estimate cost based on tier
-                cost_map = {"cheap": 0.001, "mid": 0.005, "smart": 0.02}
-                actual_cost = cost_map.get(current_tier, 0.0)
-                hypothetical_cost = cost_map["smart"]
-                usage_tracker.record_usage(actual_cost, hypothetical_cost)
+                    # Estimate cost based on tier
+                    cost_map = {"cheap": 0.001, "mid": 0.005, "smart": 0.02}
+                    actual_cost = cost_map.get(current_tier, 0.0)
+                    hypothetical_cost = cost_map["smart"]
+                    usage_tracker.record_usage(actual_cost, hypothetical_cost)
 
-                return response, current_config.model, score
+                    return response, current_config.model, score
             except httpx.HTTPStatusError as e:
                 status_code = e.response.status_code
                 if 500 <= status_code < 600:

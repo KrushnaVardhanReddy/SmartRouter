@@ -148,3 +148,43 @@ async def test_chat_completions_e2e(
         score_str = response.headers["x-smartrouter-score"]
         score = float(score_str)
         assert 0.0 <= score <= 1.0
+
+@pytest.mark.asyncio
+async def test_chat_completions_streaming(
+    async_client: AsyncClient, mock_provider_api_keys: None
+) -> None:
+    request_payload = {
+        "model": "openai/gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": "Tell me a joke."}],
+        "stream": True,
+    }
+
+    from unittest.mock import patch
+
+    import respx
+
+    async def dummy_generator():
+        yield "data: chunk1\n\n"
+        yield "data: chunk2\n\n"
+
+    with patch("smartrouter.router.clients.RouterClient.stream_generate") as mock_stream_generate:
+        mock_stream_generate.return_value = dummy_generator()
+
+        with respx.mock(assert_all_called=False, base_url=None) as respx_mock:
+            # We don't actually need the httpx mock if we mock stream_generate directly,
+            # but we pass through huggingface just in case the classifier loads.
+            respx_mock.route(host="huggingface.co").pass_through()
+            respx_mock.route(host="test").pass_through()
+
+            response = await async_client.post("/v1/chat/completions", json=request_payload)
+
+            assert response.status_code == 200
+            assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+
+            # Verify headers were injected by the real dispatcher
+            assert "x-smartrouter-model" in response.headers
+            assert "x-smartrouter-score" in response.headers
+
+            content = response.text
+            assert "data: chunk1\n\n" in content
+            assert "data: chunk2\n\n" in content
