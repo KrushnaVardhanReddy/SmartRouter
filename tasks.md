@@ -32,21 +32,25 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 
 - [ ] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
 - [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
+- [ ] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
+- [ ] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
+- [ ] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
 - [ ] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [ ] Fallback Chain (auto-retry next tier on 429/503 HTTP errors)
 - [ ] MCP Server (`/.well-known/mcp/`) for native agent tool integration
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
-- [ ] **E2E Testing:** Verify fallback chains and circuit breakers under load (no mocking)
+- [ ] **E2E Testing:** Verify fallback chains, PII redaction, and circuit breakers (no mocking)
 
-## Phase 4 (v0.4): Developer Tools
-*Goal: Add visibility and debugging tools for developers.*
+## Phase 4 (v0.4): Developer Tools & Observability
+*Goal: Add visibility, OpenTelemetry, and debugging tools for developers.*
 
+- [ ] **OpenTelemetry (OTEL) Export:** Emit traces to Datadog, Langfuse, or Phoenix
 - [ ] Analytics Web Dashboard (simple UI to view routing decisions and cost savings)
 - [ ] `GET /v1/explain` endpoint (returns the chosen model and why)
 - [ ] `force_model` override (via custom headers or prompt injection for testing)
 - [ ] Persistent System Prompt Injection (append/prepend from config)
-- [ ] **E2E Testing:** Verify system prompt injection and dashboard analytics end-to-end
+- [ ] **E2E Testing:** Verify OTEL traces and dashboard analytics end-to-end
 
 ## Phase 5 (v1.0): Open Source Launch & Distribution
 *Goal: Frictionless adoption for the community.*
