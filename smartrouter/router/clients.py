@@ -53,7 +53,7 @@ class OpenRouterClient(BaseProvider):
 
                     if response.status_code == 429 or 500 <= response.status_code < 600:
                         if attempt < max_retries:
-                            await asyncio.sleep(base_delay * (2 ** attempt))
+                            await asyncio.sleep(base_delay * (2**attempt))
                             continue
                         response.raise_for_status()
 
@@ -63,7 +63,7 @@ class OpenRouterClient(BaseProvider):
 
                 except httpx.RequestError:
                     if attempt < max_retries:
-                        await asyncio.sleep(base_delay * (2 ** attempt))
+                        await asyncio.sleep(base_delay * (2**attempt))
                         continue
                     raise
             raise RuntimeError("Unreachable")

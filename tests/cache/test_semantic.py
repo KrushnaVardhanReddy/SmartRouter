@@ -9,6 +9,7 @@ async def test_empty_cache() -> None:
     result = await cache.get_cached_response([1.0, 0.0, 0.0])
     assert result is None
 
+
 @pytest.mark.asyncio
 async def test_add_and_get_exact_match() -> None:
     cache = SemanticCache()
@@ -19,6 +20,7 @@ async def test_add_and_get_exact_match() -> None:
 
     result = await cache.get_cached_response(query_embedding)
     assert result == response
+
 
 @pytest.mark.asyncio
 async def test_add_and_get_similar_match() -> None:
@@ -32,6 +34,7 @@ async def test_add_and_get_similar_match() -> None:
     result = await cache.get_cached_response(similar_embedding, threshold=0.95)
     assert result == response
 
+
 @pytest.mark.asyncio
 async def test_add_and_get_below_threshold() -> None:
     cache = SemanticCache()
@@ -43,6 +46,7 @@ async def test_add_and_get_below_threshold() -> None:
 
     result = await cache.get_cached_response(different_embedding, threshold=0.95)
     assert result is None
+
 
 @pytest.mark.asyncio
 async def test_cosine_similarity_edge_cases() -> None:
