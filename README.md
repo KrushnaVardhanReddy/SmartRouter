@@ -84,7 +84,16 @@ The AI agent reviews and proposes each spec document first. **Work only begins a
 - **Fastest time-to-v1.** Easier for open-source contributors to understand, fork, and contribute to.
 - **Future path:** If a specific hot path ever becomes a bottleneck, that single component can be rewritten in Go later without rewriting the whole project.
 
-**Stack:** `Python 3.14` · `FastAPI` · `uvicorn` · `httpx (async)` · `scikit-learn` · `sentence-transformers` · `Docker`
+**Stack:** `Python 3.14` · `FastAPI` · `uvicorn` · `httpx (async)` · `scikit-learn` · `llama-cpp-python` · `Docker`
+
+### Local Model Architecture (Two GGUF Models, Two Roles)
+
+| Model | File | Role | Why |
+|---|---|---|---|
+| **nomic-embed-text-v1.5** | `nomic-embed-text-v1.5.Q4_K_M.gguf` | **Embedding** (vectorizes prompts for complexity scoring) | Embedding-only model. Outputs a dense vector → fed into Scikit-Learn for the `0.0–1.0` score. ~10ms on CPU. ~90MB RAM. |
+| **SmolLM2-135M-Instruct** | `smollm2-135m-instruct-q4_k_m.gguf` | **Generative Guardrails** (jailbreak, PII, toxicity checks) | Instruction-tuned generative LLM. Can reason: *"Is this a jailbreak? YES/NO"*. ~10ms on CPU. ~90MB RAM. |
+
+These models serve **completely different purposes** and are not interchangeable. Both are loaded via `llama-cpp-python`.
 
 ## Contract-Based Development
 
