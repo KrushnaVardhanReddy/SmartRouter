@@ -80,4 +80,5 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] SSO / Auth Gateway integration (API keys mapping to users)
 - [ ] **`smartrouter explain` CLI:** Subcommand to debug routing decisions transparently against a prompt
 - [ ] **Community Classifier Registry:** Hub to upload and download domain-optimized `.pkl` classifier models
+- [ ] **Shared Savings Billing Engine:** Calculate "Hypothetical vs Actual" costs to automatically bill clients 10% of the money saved in BYOK mode
 - [ ] **E2E Testing:** Verify CLI and Docker deployments operate successfully in a clean environment
