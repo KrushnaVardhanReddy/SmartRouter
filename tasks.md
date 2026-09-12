@@ -32,18 +32,18 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 
 - [ ] **Shadow Mode (Monitor Only):** Track hypothetical savings without intercepting requests
 - [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
-- [ ] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
-- [ ] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
+- [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
+- [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
 - [ ] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
-- [ ] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
+- [x] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
-- [ ] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
-- [ ] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
-- [ ] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
+- [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
+- [x] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
+- [x] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
 - [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
-- [ ] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
-- [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
-- [ ] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
+- [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
+- [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
+- [/] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
 ## Phase 4 (v0.4): Developer Tools, Knowledge, & Guardrails
