@@ -1,0 +1,53 @@
+TASK: P3-T12 — Migrate MCP Client to Official Python SDK
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Replace the existing custom REST-based `MCPClient` in `smartrouter/mcp/client.py`
+with the official Anthropic `mcp` Python SDK. The current implementation uses
+non-standard HTTP REST endpoints (`/tools`, `/tools/{name}/execute`) which are
+not the real MCP protocol. The official SDK uses proper JSON-RPC 2.0 over stdio
+or SSE transport.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Add `mcp` to project dependencies: `uv add mcp`
+- Replace `smartrouter/mcp/client.py` with a new implementation using the
+  official `mcp` Python SDK (`ClientSession` + `StdioServerParameters`).
+- The new `MCPClient` class must expose two async methods with the same
+  external signatures as before so no other files need to change:
+    1. `async def fetch_tools(self, server_command: list[str]) -> list[dict]`
+    2. `async def execute_tool(self, server_command: list[str], tool_name: str, arguments: dict) -> dict`
+- Note: the parameter is now `server_command: list[str]` (e.g.
+  `["npx", "-y", "@modelcontextprotocol/server-git"]`) instead of
+  `server_url: str`. Update call sites in `routes.py` or `dispatcher.py`
+  if they reference the old `server_url` parameter.
+- The default MCP server to use is the official git server:
+  `["npx", "-y", "@modelcontextprotocol/server-git"]`
+- Keep `SMARTROUTER_MCP_SERVER_CMD` as an env var to allow overriding the
+  command (default above). Read it from config/env.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Use `from mcp import ClientSession, StdioServerParameters`
+- Use `from mcp.client.stdio import stdio_client` for the transport layer.
+- For `fetch_tools`, open the session, call `session.list_tools()`, convert
+  each tool to a plain dict with `name`, `description`, `parameters` keys.
+- For `execute_tool`, open the session, call `session.call_tool(tool_name, arguments)`,
+  return the result as a plain dict.
+- Each call should open a fresh `stdio_client` context (do NOT maintain a
+  persistent connection for now — that is a Phase 4 optimization).
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/mcp/client.py             (full rewrite)
+- tests/mcp/test_client.py              (update tests for new interface)
+- pyproject.toml                        (add `mcp` dependency)
+
+Commit: "jules: migrate MCPClient to official mcp python sdk"
+Target branch: feature/dev

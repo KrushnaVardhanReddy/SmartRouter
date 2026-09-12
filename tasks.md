@@ -43,7 +43,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
 - [x] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
 - [/] Fallback Chain (auto-retry next tier if the current tier completely fails)
-- [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
+- [/] **MCP Integration (official `mcp` SDK):** Migrate from custom REST client to official Anthropic MCP Python SDK with `@modelcontextprotocol/server-git`
 - [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
 - [/] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX
 - [x] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
