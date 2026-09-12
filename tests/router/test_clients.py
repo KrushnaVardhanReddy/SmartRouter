@@ -66,6 +66,7 @@ async def test_openrouter_client_generate(mock_openrouter_api_key):
     # Use MagicMock for the response object itself because json() and raise_for_status()
     # are regular synchronous methods on httpx.Response, not async methods.
     from unittest.mock import MagicMock
+
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
     mock_response.json.return_value = mock_response_data
