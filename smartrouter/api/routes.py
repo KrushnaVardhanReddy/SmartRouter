@@ -1,10 +1,15 @@
 import httpx
 from fastapi import APIRouter, HTTPException, Response
 
-from smartrouter.api.models import ChatCompletionRequest, ChatCompletionResponse
+from smartrouter.api.models import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    UsageReportResponse,
+)
 from smartrouter.router.dispatcher import RouterDispatcher
 
 router = APIRouter()
+
 
 @router.post("/v1/chat/completions", response_model=ChatCompletionResponse)
 async def create_chat_completion(
@@ -27,3 +32,15 @@ async def create_chat_completion(
         raise HTTPException(status_code=status_code, detail=detail)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/v1/usage", response_model=UsageReportResponse)
+async def get_usage_report() -> UsageReportResponse:
+    # Dummy zero-ed values as instructed for now
+    return UsageReportResponse(
+        total_requests=0,
+        total_spent_usd=0.0,
+        hypothetical_spent_usd=0.0,
+        total_saved_usd=0.0,
+        shadow_mode_active=False,
+    )

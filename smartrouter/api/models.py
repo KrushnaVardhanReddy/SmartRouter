@@ -42,3 +42,11 @@ class ChatCompletionResponse(BaseModel):
     model: str
     choices: list[ChatCompletionChoice]
     usage: ChatCompletionUsage | None = Field(default=None)
+
+
+class UsageReportResponse(BaseModel):
+    total_requests: int
+    total_spent_usd: float
+    hypothetical_spent_usd: float
+    total_saved_usd: float
+    shadow_mode_active: bool
