@@ -1,5 +1,7 @@
 import logging
 
+import httpx
+
 from smartrouter.api.models import ChatCompletionRequest, ChatCompletionResponse
 from smartrouter.classifier.engine import ClassifierEngine
 from smartrouter.core.config import get_settings
@@ -61,6 +63,45 @@ class RouterDispatcher:
                 "Shadow mode is enabled. Proceeding with standard routing for now."
             )
 
-        # 4. Dispatch using RouterClient
-        client = RouterClient(config=tier_config)
-        return await client.generate(request)
+        # 4. Dispatch using RouterClient with Fallback Chain
+        fallback_chains = {
+            "smart": ["smart", "mid", "cheap"],
+            "mid": ["mid", "cheap"],
+            "cheap": ["cheap"],
+        }
+
+        tiers_to_try = fallback_chains.get(tier_name, [tier_name])
+        last_exception: Exception | None = None
+
+        for current_tier in tiers_to_try:
+            current_config = getattr(self.settings.tiers, current_tier)
+            client = RouterClient(config=current_config)
+
+            try:
+                logger.info(f"Attempting dispatch with tier: {current_tier}")
+                return await client.generate(request)
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
+                if 500 <= status_code < 600:
+                    logger.warning(
+                        f"Tier '{current_tier}' failed with 5xx error ({status_code}). "
+                        f"Falling back to next tier if available."
+                    )
+                    last_exception = e
+                    continue
+                else:
+                    # Don't fallback on 4xx errors
+                    raise
+            except httpx.RequestError as e:
+                logger.warning(
+                    f"Tier '{current_tier}' failed with network error: {e}. "
+                    f"Falling back to next tier if available."
+                )
+                last_exception = e
+                continue
+
+        if last_exception:
+            logger.error("All tiers in fallback chain failed.")
+            raise last_exception
+
+        raise RuntimeError("Unreachable")
