@@ -27,6 +27,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] Add `GET /v1/usage` (cost savings report endpoint)
 - [x] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
 - [x] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
+- [ ] (Jules) **LLM-as-a-Judge Labeling:** Rewrite seed data script to use `gpt-4o-mini` to score prompt complexity for perfectly clean training labels (P2-T10)
 - [x] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
