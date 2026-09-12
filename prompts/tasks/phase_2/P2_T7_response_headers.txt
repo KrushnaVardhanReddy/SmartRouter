@@ -1,0 +1,31 @@
+TASK: P2-T7 — Inject Custom Response Headers
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Inject custom `X-SmartRouter-Model` and `X-SmartRouter-Score` headers into the standard OpenAI-compatible response.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/api/routes.py` and `smartrouter/router/dispatcher.py`
+- Modify the dispatcher to return the chosen model ID and complexity score alongside the actual `ChatCompletionResponse`.
+- In `routes.py`, inject those values as HTTP headers (`X-SmartRouter-Model` and `X-SmartRouter-Score`) on the FastAPI `Response` object before returning it to the client.
+- Add unit tests verifying the headers exist in the response.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- You might need to change `route_request` to return a tuple `(response, model_id, score)` or a custom dataclass so the route handler has access to the metadata.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/api/routes.py
+- smartrouter/router/dispatcher.py
+- tests/api/test_routes.py
+
+Commit: "jules: inject custom response headers for model and score"
+Target branch: feature/dev

@@ -23,8 +23,8 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] (Jules) Implement Context Window Guard utility in `router/context_guard.py` (P2-T3)
 - [x] (Jules) Implement Dynamic Routing Logic in `router/dispatcher.py` (P2-T4)
 - [ ] Add Streaming Support (`stream: true` SSE proxying)
-- [ ] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
-- [ ] Add `GET /v1/usage` (cost savings report endpoint)
+- [/] Inject custom response headers (`X-SmartRouter-Model`, `X-SmartRouter-Score`)
+- [/] Add `GET /v1/usage` (cost savings report endpoint)
 - [/] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
 - [/] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
@@ -36,7 +36,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] **Context Compression:** Auto-summarize older chat history for lower-tier models
 - [x] **PII Redaction:** Use `presidio-analyzer` & `presidio-anonymizer` to mask sensitive data
 - [x] **Jailbreak/Prompt Injection Blocking:** Reject malicious prompts before routing
-- [ ] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
+- [/] **JSON Mode Enforcement:** Guarantee JSON capability when `response_format` is requested
 - [x] Semantic Caching (`faiss`/`hnswlib`) to return cached responses for duplicate prompts
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
@@ -45,7 +45,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [/] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
-- [ ] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX
+- [/] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX
 - [x] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 

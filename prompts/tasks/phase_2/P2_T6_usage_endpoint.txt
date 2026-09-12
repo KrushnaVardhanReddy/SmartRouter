@@ -1,0 +1,32 @@
+TASK: P2-T6 — Usage Endpoint
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Implement a new `GET /v1/usage` endpoint to report the cost savings achieved by SmartRouter.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/api/routes.py` and `smartrouter/core/usage.py` (create if needed)
+- The endpoint is already defined in `contracts/openapi.yaml`. Ensure `smartrouter/api/models.py` has `UsageReportResponse` generated.
+- In `routes.py`, create the `GET /v1/usage` handler returning `UsageReportResponse`.
+- For now, since we aren't tracking persistent state yet, just return dummy zero-ed values in the response object, but make sure the endpoint works and validates against the schema.
+- Add unit tests verifying `GET /v1/usage` returns a 200 OK.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- You will need to regenerate or manually add the Pydantic models in `models.py`.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/api/routes.py
+- smartrouter/api/models.py
+- tests/api/test_routes.py
+
+Commit: "jules: implement GET /v1/usage endpoint"
+Target branch: feature/dev

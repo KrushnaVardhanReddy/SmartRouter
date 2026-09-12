@@ -1,0 +1,31 @@
+TASK: P3-T11 — Batteries-Included Config
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Ship an annotated `smartrouter.yaml` in the root of the project with default regex patterns to simplify the UX.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Create/modify `smartrouter.yaml` in the root directory.
+- Include the standard thresholds and tier definitions.
+- Include a commented-out section for `pattern_routing` showing real-world examples:
+  - Routing `^(git|bash|grep|ls|pwd)` to a local nano model.
+  - Routing `(SQL|SELECT|INSERT)` to a mid-tier model.
+- Add plenty of helpful comments explaining how users can uncomment and modify these.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- This is purely a configuration and documentation task, no Python logic changes are needed.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter.yaml
+
+Commit: "jules: add batteries-included smartrouter.yaml with pattern examples"
+Target branch: feature/dev

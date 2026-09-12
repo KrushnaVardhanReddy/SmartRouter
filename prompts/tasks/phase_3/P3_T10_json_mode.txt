@@ -1,0 +1,32 @@
+TASK: P3-T10 — JSON Mode Enforcement
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Guarantee JSON capability when `response_format: { "type": "json_object" }` is requested by forcing the route to a tier capable of strict JSON mode (e.g. Mid or Smart) or explicitly enabling JSON format strings on the chosen provider.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- `contracts/openapi.yaml` already has `response_format` defined. Update `models.py` to support it.
+- In `route_request`, check if the user requested JSON mode.
+- If JSON mode is requested, ensure the final selected client explicitly receives that parameter. If the chosen "cheap" model does not support it natively (e.g., Llama 3 via Groq might require a system prompt injection or specific API flags), implement the necessary abstraction to ensure the JSON constraint is met, or upgrade the tier to `mid` automatically.
+- Provide Pytest tests proving JSON mode overrides routing correctly or passes flags correctly.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- Upgrading to `mid` is the safest way to ensure structural JSON mode compatibility if the cheap tier struggles.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO MODIFY/CREATE:
+- smartrouter/api/models.py
+- smartrouter/router/dispatcher.py
+- tests/router/test_dispatcher.py
+
+Commit: "jules: implement json mode enforcement"
+Target branch: feature/dev

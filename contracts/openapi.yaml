@@ -83,6 +83,12 @@ components:
         stream:
           type: boolean
           default: false
+        response_format:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [text, json_object]
       required:
         - messages
 
