@@ -46,7 +46,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [x] Create multi-stage `Dockerfile` (optimized for ML dependencies)
 - [ ] **Batteries-Included Config:** Ship annotated `smartrouter.yaml` with default regex patterns to simplify UX
-- [/] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
+- [x] **Enterprise License Manager:** Implement `LicenseManager` to gate Phase 3 and Phase 5 features via `SMARTROUTER_LICENSE_KEY`
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
 ## Phase 4 (v0.4): Developer Tools, Knowledge, & Guardrails
