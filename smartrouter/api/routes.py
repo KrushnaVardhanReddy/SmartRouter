@@ -6,6 +6,7 @@ from smartrouter.router.dispatcher import RouterDispatcher
 
 router = APIRouter()
 
+
 @router.post("/v1/chat/completions", response_model=ChatCompletionResponse)
 async def create_chat_completion(
     request: ChatCompletionRequest,

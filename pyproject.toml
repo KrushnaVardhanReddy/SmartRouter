@@ -16,6 +16,7 @@ dependencies = [
     "types-pyyaml>=6.0.12.20260906",
     "uvicorn>=0.52.4",
     "mcp>=2.2.0",
+    "datasets>=5.0.1",
 ]
 
 [dependency-groups]

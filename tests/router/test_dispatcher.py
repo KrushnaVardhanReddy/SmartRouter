@@ -202,7 +202,7 @@ async def test_dispatch_fallback_from_smart_to_mid(
         instance.generate = AsyncMock(side_effect=[http_error, dummy_response])
 
         dispatcher = RouterDispatcher()
-        response, model, score = await dispatcher.dispatch(dummy_request)
+        response, model, _score = await dispatcher.dispatch(dummy_request)
 
         assert response == dummy_response
         assert model == "mid-model"
