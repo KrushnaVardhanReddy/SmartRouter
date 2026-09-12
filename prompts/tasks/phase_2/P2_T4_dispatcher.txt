@@ -1,0 +1,34 @@
+TASK: P2-T4 — Dynamic Routing Dispatcher
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create the `RouterDispatcher` class that acts as the orchestrator. It takes a
+prompt, runs it through the `ClassifierEngine`, checks the `ContextGuard`, 
+and then dynamically routes to the appropriate provider (e.g. `OpenRouterClient`)
+based on the thresholds defined in the YAML config.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `tests/router/test_dispatcher.py`
+- DO NOT MODIFY `smartrouter/main.py`. This task is strictly for creating the dispatcher logic.
+- Use the `get_settings()` from `smartrouter/core/config.py`.
+- The `dispatch(request: ChatCompletionRequest) -> ChatCompletionResponse` method should:
+  1. Score the prompt (using the last user message).
+  2. Use `low_threshold` and `high_threshold` to pick a Tier (`cheap`, `mid`, `smart`).
+  3. Validate against `max_context_tokens` using `ContextGuard`. If it exceeds the tier limit, upgrade to the next tier.
+  4. Instantiate the correct `OpenRouterClient` (or equivalent) using the TierConfig and execute the call.
+- Ensure the code uses the new optimization flags (like `shadow_mode`) gracefully (even if just logging for now).
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/router/dispatcher.py
+- tests/router/test_dispatcher.py
+
+Commit: "jules: implement dynamic routing dispatcher"
+Target branch: feature/dev
