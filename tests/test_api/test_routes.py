@@ -7,7 +7,6 @@ async def test_chat_completions_mock(async_client: AsyncClient):
     payload = {"messages": [{"role": "user", "content": "Hi"}]}
     response = await async_client.post("/v1/chat/completions", json=payload)
     assert response.status_code == 200
-
     data = response.json()
     assert "choices" in data
     assert len(data["choices"]) == 1
