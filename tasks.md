@@ -70,7 +70,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Persistent System Prompt Injection (append/prepend from config)
 - [ ] **Data Flywheel (Self-Healing Router):** 
   - `POST /v1/feedback`: Endpoint to flag bad routing decisions from the frontend UI
-  - `scripts/retrain_nightly.py`: CRON script to pass flagged mistakes through the LLM-as-a-judge, append to `training_seed.jsonl`, retrain the classifier, and hot-reload the `.pkl` model
+  - `scripts/retrain_nightly.py`: CRON script to pass flagged mistakes through the LLM-as-a-judge, append to `training_seed.jsonl`, retrain the classifier, and hot-reload the `.pkl` model. **Must call `GuardrailsManager.redact_pii()` on prompts before sending to OpenAI to prevent data leakage.**
 - [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
 
 ## Phase 5 (v0.5): Enterprise Competitive Parity
