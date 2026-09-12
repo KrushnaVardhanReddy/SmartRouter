@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -17,7 +17,7 @@ def test_seed_training_data_fallback() -> None:
             "scripts.seed_training_data.load_dataset",
             side_effect=Exception("Gated dataset"),
         ),
-        patch("scripts.seed_training_data.process_dataset") as mock_process,
+        patch("scripts.seed_training_data.process_dataset", new_callable=AsyncMock) as mock_process,
     ):
         seed_training_data.main()
 
@@ -31,7 +31,8 @@ def test_seed_training_data_fallback() -> None:
         assert "prompt" in args[0][0]
 
 
-def test_seed_training_data_process_dataset(tmp_path: pytest.TempPathFactory) -> None:
+@pytest.mark.asyncio
+async def test_seed_training_data_process_dataset(tmp_path: pytest.TempPathFactory) -> None:
     test_output_path = str(tmp_path / "training_seed.jsonl")  # type: ignore
     dummy_data = [
         {"prompt": "Hello", "winner_model": "gpt-3.5-turbo"},
@@ -39,7 +40,7 @@ def test_seed_training_data_process_dataset(tmp_path: pytest.TempPathFactory) ->
         {"instruction": "Dummy instruction"},
     ]
 
-    def mock_eval_complexity(prompt: str) -> int:
+    async def mock_eval_complexity(prompt: str, client: object = None) -> int:
         if prompt == "Hello":
             return 0
         elif prompt == "Complex stuff":
@@ -52,11 +53,11 @@ def test_seed_training_data_process_dataset(tmp_path: pytest.TempPathFactory) ->
         "scripts.seed_training_data.evaluate_complexity_with_llm",
         side_effect=mock_eval_complexity,
     ):
-        seed_training_data.process_dataset(dummy_data, test_output_path, max_samples=3)
+        await seed_training_data.process_dataset(dummy_data, test_output_path, max_samples=3)
 
     assert os.path.exists(test_output_path)
 
-    with open(test_output_path, "r") as f:
+    with open(test_output_path, "r") as f:  # noqa: ASYNC230
         lines = f.readlines()
 
     assert len(lines) == 3

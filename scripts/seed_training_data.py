@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -20,48 +21,61 @@ Output exactly a JSON object in this format: {"complexity": <0 or 1>}
 """
 
 
-def evaluate_complexity_with_llm(prompt: str) -> int:
+async def evaluate_complexity_with_llm(prompt: str, client: openai.AsyncOpenAI | None = None) -> int:
     """Uses LLM-as-a-judge to evaluate prompt complexity (0 or 1)."""
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        logger.debug("OPENAI_API_KEY not found. Using dummy fallback complexity.")
+    if not api_key or not client:
+        logger.debug("OPENAI_API_KEY not found or client not provided. Using dummy fallback complexity.")
         return 0 if len(prompt) < 20 else 1
 
-    try:
-        client = openai.OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.0,
-            max_tokens=10,
-        )
-        content = response.choices[0].message.content
-        if not content:
-            return 1
-        result = json.loads(content)
-        return int(result.get("complexity", 1))
-    except Exception as e:
-        logger.warning(f"LLM-as-a-judge failed: {e}. Falling back to dummy logic.")
-        return 0 if len(prompt) < 20 else 1
+    retry_count = 0
+    max_retries = 5
+    base_delay = 1.0
+
+    while retry_count <= max_retries:
+        try:
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.0,
+                max_tokens=10,
+            )
+            content = response.choices[0].message.content
+            if not content:
+                return 1
+            result = json.loads(content)
+            return int(result.get("complexity", 1))
+        except openai.RateLimitError as e:
+            if retry_count == max_retries:
+                logger.warning(f"Rate limit exceeded after {max_retries} retries: {e}. Falling back to dummy logic.")
+                return 0 if len(prompt) < 20 else 1
+            delay = base_delay * (2 ** retry_count)
+            logger.info(f"Rate limit hit. Retrying in {delay} seconds...")
+            await asyncio.sleep(delay)
+            retry_count += 1
+        except Exception as e:
+            logger.warning(f"LLM-as-a-judge failed: {e}. Falling back to dummy logic.")
+            return 0 if len(prompt) < 20 else 1
+
+    return 0 if len(prompt) < 20 else 1
 
 
-def process_dataset(dataset: Any, output_path: str, max_samples: int = 100) -> None:
+async def process_dataset(dataset: Any, output_path: str, max_samples: int = 10000) -> None:
     """Processes the dataset and saves it to a JSONL file."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    count = 0
-    with open(output_path, "w") as f:
-        for item in dataset:
-            if count >= max_samples:
-                break
 
-            # Use appropriate logic based on the dataset structure
-            # The lmsys/chatbot_arena_conversations structure:
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.AsyncOpenAI(api_key=api_key) if api_key else None
+
+    semaphore = asyncio.Semaphore(20)
+
+    async def process_item(item: dict[str, Any]) -> dict[str, Any] | None:
+        async with semaphore:
             if "conversation_a" in item and "winner" in item:
-                # Assuming conversation_a is a list of conversation turns, grab the first one
                 prompt = (
                     item["conversation_a"][0]["content"]
                     if isinstance(item["conversation_a"], list)
@@ -70,51 +84,50 @@ def process_dataset(dataset: Any, output_path: str, max_samples: int = 100) -> N
                     else str(item["conversation_a"])
                 )
                 winner = item["winner"]
-                complexity = evaluate_complexity_with_llm(prompt)
-
-                record = {
-                    "prompt": prompt,
-                    "complexity": complexity,
-                    "winner_model": winner,
-                }
-                f.write(json.dumps(record) + "\n")
-                count += 1
             elif "prompt" in item and "winner_model" in item:
-                # Assuming prompt is a list of conversation turns, grab the first one
                 prompt = (
                     item["prompt"][0]
                     if isinstance(item["prompt"], list)
                     else item["prompt"]
                 )
                 winner = item["winner_model"]
-                complexity = evaluate_complexity_with_llm(prompt)
-
-                record = {
-                    "prompt": prompt,
-                    "complexity": complexity,
-                    "winner_model": winner,
-                }
-                f.write(json.dumps(record) + "\n")
-                count += 1
-            # Fallback for our dummy dataset
             elif "instruction" in item:
                 prompt = item["instruction"]
-                complexity = evaluate_complexity_with_llm(prompt)
-                record = {
-                    "prompt": prompt,
-                    "complexity": complexity,
-                    "winner_model": "dummy_model",
-                }
-                f.write(json.dumps(record) + "\n")
-                count += 1
+                winner = "dummy_model"
             else:
-                # Try to extract something if structure is unknown
-                continue
+                return None
+
+            complexity = await evaluate_complexity_with_llm(prompt, client)
+            return {
+                "prompt": prompt,
+                "complexity": complexity,
+                "winner_model": winner,
+            }
+
+    tasks = []
+    count = 0
+    for item in dataset:
+        if count >= max_samples:
+            break
+
+        # Quick validation before task creation to correctly count
+        if ("conversation_a" in item and "winner" in item) or \
+           ("prompt" in item and "winner_model" in item) or \
+           ("instruction" in item):
+            tasks.append(process_item(item))
+            count += 1
+
+    results = await asyncio.gather(*tasks)
+
+    with open(output_path, "w") as f:  # noqa: ASYNC230
+        for result in results:
+            if result is not None:
+                f.write(json.dumps(result) + "\n")
 
     logger.info(f"Processed {count} samples and saved to {output_path}")
 
 
-def main() -> None:
+async def main_async() -> None:
     output_path = "data/training_seed.jsonl"
     logger.info("Attempting to load local parquet dataset...")
     try:
@@ -122,7 +135,7 @@ def main() -> None:
         dataset = load_dataset(
             "parquet", data_files="data/chatbot_arena.parquet", split="train"
         )
-        process_dataset(dataset, output_path, max_samples=100)
+        await process_dataset(dataset, output_path, max_samples=10000)
     except Exception as e:
         logger.warning(f"Could not load the original dataset due to: {e}")
         logger.info(
@@ -214,7 +227,11 @@ def main() -> None:
                 "winner_model": "gpt-4",
             },
         ]
-        process_dataset(dummy_dataset, output_path, max_samples=20)
+        await process_dataset(dummy_dataset, output_path, max_samples=20)
+
+
+def main() -> None:
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
