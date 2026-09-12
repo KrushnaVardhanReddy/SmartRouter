@@ -66,7 +66,9 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] `force_model` override (via custom headers or prompt injection for testing)
 - [ ] **Per-Client Routing Policy:** Set default `routing_preference` at the API key level (e.g., enterprise clients always get `frontier_only`) rather than requiring per-request overrides
 - [ ] Persistent System Prompt Injection (append/prepend from config)
-- [ ] **Feedback Loop (`POST /v1/feedback`):** Endpoint to flag bad routing decisions for future classifier retraining
+- [ ] **Data Flywheel (Self-Healing Router):** 
+  - `POST /v1/feedback`: Endpoint to flag bad routing decisions from the frontend UI
+  - `scripts/retrain_nightly.py`: CRON script to pass flagged mistakes through the LLM-as-a-judge, append to `training_seed.jsonl`, retrain the classifier, and hot-reload the `.pkl` model
 - [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
 
 ## Phase 5 (v0.5): Enterprise Competitive Parity
