@@ -1,0 +1,10 @@
+Task: Budget Circuit Breaker & Usage Tracking
+Goal: Implement global usage tracking and enforce a budget limit that forces all requests to the cheapest tier once exceeded.
+
+Instructions:
+1. In `smartrouter/core/usage.py`, create a `UsageTracker` singleton (or just a global instance) that tracks: `total_requests`, `total_spent_usd`, `hypothetical_spent_usd`, and `total_saved_usd`. Provide helper methods like `record_usage(actual_cost, hypothetical_cost)`. Since we don't have real pricing yet, assume a flat rate per token or request for testing.
+2. In `smartrouter/core/config.py`, add `budget_limit_usd: float = 0.0` to the `RouterConfig` object.
+3. In `smartrouter/api/routes.py`, update `get_usage_report` to return real values from `UsageTracker` instead of hardcoded dummy zeroes.
+4. In `smartrouter/router/dispatcher.py`, check `UsageTracker.total_spent_usd` against `settings.router.budget_limit_usd` (if limit > 0). If it exceeds the budget limit, aggressively force the `tier_name = "cheap"` and emit a warning log, skipping normal classifier tier selection. 
+5. After `client.generate()` returns successfully, estimate the cost and update `UsageTracker`.
+6. Add unit tests for this circuit breaker behavior in `tests/router/test_dispatcher.py` to prove that budget limits prevent expensive tier routing. Ensure all existing tests pass.

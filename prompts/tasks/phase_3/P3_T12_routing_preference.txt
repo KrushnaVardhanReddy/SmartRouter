@@ -1,0 +1,59 @@
+TASK: P3-T12 — `routing_preference` Flag (Force Frontier / Economy)
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Add a `routing_preference` field to the chat completion request
+that lets callers pin routing to a specific tier class,
+bypassing the ML classifier entirely. Supports three values:
+  - `auto`          (default): normal ML-based routing
+  - `frontier_only`: always route to the `smart` tier, no
+                     downgrade allowed under any circumstance
+  - `economy`:      always route to the `cheap` tier, no
+                     upgrade allowed (ignores context limits
+                     and JSON mode enforcement)
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/api/models.py`
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `tests/router/test_dispatcher.py`
+- ONLY touch the three files listed above. Do NOT modify any
+  other files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. In `models.py`, add a `RoutingPreference` string enum:
+   `class RoutingPreference(str, Enum): auto | frontier_only | economy`
+   Add `routing_preference: RoutingPreference = RoutingPreference.auto`
+   to the `ChatCompletionRequest` model.
+
+2. In `dispatcher.py`, at the very start of the `dispatch()`
+   method (BEFORE the classifier is called), check
+   `request.routing_preference`:
+   - If `frontier_only`: set `tier_name = "smart"`,
+     `tier_config = settings.tiers.smart`, then SKIP all
+     classifier, context guard, JSON mode, and shadow mode logic.
+     Jump straight to the dispatch/fallback loop.
+   - If `economy`: set `tier_name = "cheap"`,
+     `tier_config = settings.tiers.cheap`, then SKIP all
+     classifier, context guard, JSON mode, and shadow mode logic.
+     Jump straight to the dispatch/fallback loop.
+   - If `auto` (default): proceed with the existing ML-based
+     routing logic unchanged.
+   - Log a clear info message when bypassing the classifier, e.g.:
+     "routing_preference=frontier_only: bypassing classifier,
+      routing directly to smart tier."
+
+3. In `test_dispatcher.py`, add at least two new tests:
+   - `test_dispatch_frontier_only_bypasses_classifier`: With a
+     low complexity score (0.1), setting `frontier_only` must
+     result in the `smart` tier being used, not `cheap`.
+   - `test_dispatch_economy_bypasses_classifier`: With a high
+     complexity score (0.95), setting `economy` must result in
+     the `cheap` tier being used, not `smart`.
+
+4. All existing tests must continue to pass.

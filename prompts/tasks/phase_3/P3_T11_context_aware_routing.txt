@@ -1,0 +1,58 @@
+TASK: P3-T11 — Context-Aware Capacity Routing
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Enhance the dispatcher to use token count as a primary routing
+signal alongside the ML complexity score. Instead of picking a
+tier first and then checking context limits reactively, the
+dispatcher should proactively probe tier capacity before
+dispatching and cascade down to a tier that can handle the
+request's token load.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `smartrouter/router/context_guard.py`
+- Target file: `tests/router/test_dispatcher.py`
+- ONLY touch the three files listed above. Do NOT modify any
+  other files.
+- Write strict Python 3.14 code with type hints.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. In `context_guard.py`, add a helper function:
+   `get_token_count(messages: list[ChatMessage]) -> int`
+   that returns the total estimated token count for all messages.
+
+2. In `dispatcher.py`, after the classifier picks an initial
+   tier (cheap/mid/smart), perform a capacity pre-check BEFORE
+   any network dispatch:
+   a. Count tokens in the request.
+   b. If the token count EXCEEDS the selected tier's
+      `max_context_tokens`, do NOT immediately upgrade the tier.
+   c. First, attempt `compress_context()` (already implemented).
+      If the compressed messages now fit, continue with the
+      current tier using the compressed messages.
+   d. If even after compression the token count still exceeds
+      the limit, only THEN cascade up to the next tier
+      (cheap → mid → smart).
+   e. Log a clear info message for each decision (compression
+      attempted, tier upgraded due to capacity, etc.)
+
+3. This replaces the old two-step reactive guard that was
+   performed mid-dispatch. The new pre-check must happen
+   BEFORE selecting the final tier config, not after.
+
+4. In `test_dispatcher.py`, add at least two new tests:
+   - `test_dispatch_compresses_before_upgrading_tier`: Verify
+     that if a cheap-scored prompt is too long for the cheap
+     tier, compression is attempted first, and if it succeeds,
+     the cheap tier is still used (not upgraded).
+   - `test_dispatch_upgrades_after_compression_fails`: Verify
+     that if the prompt is too long even after compression,
+     the dispatcher correctly upgrades to the next tier.
+
+5. All existing tests must continue to pass.
