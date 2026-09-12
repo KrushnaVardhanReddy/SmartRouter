@@ -12,6 +12,13 @@ def estimate_token_count(messages: list[ChatMessage]) -> int:
     return total_tokens
 
 
+def get_token_count(messages: list[ChatMessage]) -> int:
+    """
+    Returns the total estimated token count for all messages.
+    """
+    return estimate_token_count(messages)
+
+
 def check_context_limit(messages: list[ChatMessage], max_tokens: int | None) -> bool:
     """
     Checks if the estimated token count of messages is within the max_tokens limit.

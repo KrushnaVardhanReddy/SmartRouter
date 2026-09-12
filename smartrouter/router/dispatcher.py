@@ -7,7 +7,10 @@ from smartrouter.classifier.engine import ClassifierEngine
 from smartrouter.core.config import get_settings
 from smartrouter.core.usage import usage_tracker
 from smartrouter.router.clients import RouterClient
-from smartrouter.router.context_guard import check_context_limit, compress_context
+from smartrouter.router.context_guard import (
+    compress_context,
+    get_token_count,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,33 +61,47 @@ class RouterDispatcher:
             logger.info(f"Initial routing score: {score:.3f} but budget exceeded. Forced to {tier_name} tier.")
 
         # 4. Context Guard Check and Upgrade
-        if tier_name == "cheap" and tier_config.max_context_tokens is not None and not check_context_limit(
-            request.messages, tier_config.max_context_tokens
-        ):
-            logger.info("Context limit exceeded for 'cheap' tier. Attempting to compress context.")
-            compressed = compress_context(request.messages, tier_config.max_context_tokens)
-            if check_context_limit(compressed, tier_config.max_context_tokens):
-                request.messages = compressed
-            elif not is_budget_exceeded:
-                logger.info("Even after compression, context limit exceeded for 'cheap' tier. Upgrading to 'mid'.")
-                tier_name = "mid"
-                tier_config = self.settings.tiers.mid
-            else:
-                logger.warning("Context limit exceeded for 'cheap' tier and budget exceeded. Remaining on 'cheap' tier.")
+        tiers_order = ["cheap", "mid", "smart"]
+        tier_index = tiers_order.index(tier_name)
 
-        if tier_name == "mid" and tier_config.max_context_tokens is not None and not check_context_limit(
-            request.messages, tier_config.max_context_tokens
-        ):
-            logger.info("Context limit exceeded for 'mid' tier. Attempting to compress context.")
-            compressed = compress_context(request.messages, tier_config.max_context_tokens)
-            if check_context_limit(compressed, tier_config.max_context_tokens):
+        while tier_index < len(tiers_order):
+            current_tier_name = tiers_order[tier_index]
+            current_tier_config = getattr(self.settings.tiers, current_tier_name)
+
+            if current_tier_config.max_context_tokens is None:
+                break
+
+            token_count = get_token_count(request.messages)
+            if token_count <= current_tier_config.max_context_tokens:
+                break
+
+            logger.info(f"Context limit exceeded for '{current_tier_name}' tier. Attempting to compress context.")
+            compressed = compress_context(request.messages, current_tier_config.max_context_tokens)
+
+            if get_token_count(compressed) <= current_tier_config.max_context_tokens:
                 request.messages = compressed
-            elif not is_budget_exceeded:
-                logger.info("Even after compression, context limit exceeded for 'mid' tier. Upgrading to 'smart'.")
-                tier_name = "smart"
-                tier_config = self.settings.tiers.smart
-            else:
-                logger.warning("Context limit exceeded for 'mid' tier and budget exceeded. Remaining on 'mid' tier.")
+                break
+
+            if is_budget_exceeded:
+                logger.warning(
+                    f"Context limit exceeded for '{current_tier_name}' tier and budget exceeded. "
+                    f"Remaining on '{current_tier_name}' tier."
+                )
+                break
+
+            if current_tier_name == "smart":
+                logger.warning("Context limit exceeded for 'smart' tier. Cannot upgrade further.")
+                break
+
+            next_tier_name = tiers_order[tier_index + 1]
+            logger.info(
+                f"Even after compression, context limit exceeded for '{current_tier_name}' tier. "
+                f"Upgrading to '{next_tier_name}'."
+            )
+            tier_index += 1
+
+        tier_name = tiers_order[tier_index]
+        tier_config = getattr(self.settings.tiers, tier_name)
 
         # 5. JSON Mode Enforcement
         if (

@@ -131,8 +131,8 @@ async def test_dispatch_upgrades_tier_due_to_context_limit(
 
     with (
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
-        patch("smartrouter.router.dispatcher.check_context_limit", return_value=False),
-    ):  # Force context limit exceed
+        patch("smartrouter.router.dispatcher.get_token_count", return_value=99999),
+    ):  # Force context limit exceed for all tiers
         instance = MockClient.return_value
         instance.generate = AsyncMock(return_value=dummy_response)
 
@@ -142,6 +142,62 @@ async def test_dispatch_upgrades_tier_due_to_context_limit(
         # Upgrades to 'mid' and then 'mid' also exceeds, so upgrades to 'smart'
         assert model_id == "smart-model"
         assert MockClient.call_args[1]["config"].model == "smart-model"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_compresses_before_upgrading_tier(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_classifier.score_prompt.return_value = 0.3  # Initially picks cheap
+
+    # Mock get_token_count to exceed cheap limit (1000) before compression, but fit after
+    def mock_get_token_count(messages):
+        if messages and messages[0].content == "compressed":
+            return 800       # Fits cheap
+        return 1500  # Exceeds cheap (1000)
+
+    with (
+        patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
+        patch("smartrouter.router.dispatcher.get_token_count", side_effect=mock_get_token_count),
+        patch("smartrouter.router.dispatcher.compress_context", return_value=[ChatMessage(role="user", content="compressed")])
+    ):
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        _, model_id, _ = await dispatcher.dispatch(dummy_request)
+
+        # Should stay on cheap tier since compression succeeded
+        assert model_id == "cheap-model"
+        assert MockClient.call_args[1]["config"].model == "cheap-model"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_upgrades_after_compression_fails(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    mock_classifier.score_prompt.return_value = 0.3  # Initially picks cheap
+
+    # Mock get_token_count to exceed cheap limit (1000) even after compression, but fit mid (4000)
+    def mock_get_token_count(messages):
+        if messages and messages[0].content == "compressed":
+            return 1500      # Exceeds cheap, fits mid
+        return 2000  # Exceeds cheap
+
+    with (
+        patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
+        patch("smartrouter.router.dispatcher.get_token_count", side_effect=mock_get_token_count),
+        patch("smartrouter.router.dispatcher.compress_context", return_value=[ChatMessage(role="user", content="compressed")])
+    ):
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        _, model_id, _ = await dispatcher.dispatch(dummy_request)
+
+        # Should upgrade to mid tier because compression failed to fit cheap tier
+        assert model_id == "mid-model"
+        assert MockClient.call_args[1]["config"].model == "mid-model"
 
 
 @pytest.mark.asyncio
