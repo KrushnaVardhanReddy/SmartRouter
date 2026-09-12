@@ -1,3 +1,5 @@
+import asyncio
+import itertools
 import os
 
 import httpx
@@ -13,34 +15,58 @@ class OpenRouterClient(BaseProvider):
     """
 
     def __init__(self) -> None:
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
-        if not self.api_key:
+        api_key_env = os.getenv("OPENROUTER_API_KEY")
+        if not api_key_env:
             raise ValueError("OPENROUTER_API_KEY environment variable is not set")
+
+        self.api_keys = [key.strip() for key in api_key_env.split(",") if key.strip()]
+        if not self.api_keys:
+            raise ValueError("OPENROUTER_API_KEY contains no valid keys")
+
+        self._key_iterator = itertools.cycle(self.api_keys)
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+
+    def _get_next_api_key(self) -> str:
+        """Get the next API key in round-robin fashion."""
+        return next(self._key_iterator)
 
     async def generate(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         """
-        Forward the request to OpenRouter.
+        Forward the request to OpenRouter with retries and round-robin load balancing.
         """
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-
-        # Dump the Pydantic model to a dict, excluding unset/none to avoid
-        # sending unnecessary fields or overriding OpenRouter defaults wrongly.
         payload = request.model_dump(exclude_none=True)
+        max_retries = 3
+        base_delay = 1.0
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                self.base_url, json=payload, headers=headers, timeout=30.0
-            )
-            response.raise_for_status()
+            for attempt in range(max_retries + 1):
+                api_key = self._get_next_api_key()
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                }
 
-            # Note: We expect OpenRouter to return a response that can be parsed
-            # into our ChatCompletionResponse model.
-            data = response.json()
-            return ChatCompletionResponse(**data)
+                try:
+                    response = await client.post(
+                        self.base_url, json=payload, headers=headers, timeout=30.0
+                    )
+
+                    if response.status_code == 429 or 500 <= response.status_code < 600:
+                        if attempt < max_retries:
+                            await asyncio.sleep(base_delay * (2 ** attempt))
+                            continue
+                        response.raise_for_status()
+
+                    response.raise_for_status()
+                    data = response.json()
+                    return ChatCompletionResponse(**data)
+
+                except httpx.RequestError:
+                    if attempt < max_retries:
+                        await asyncio.sleep(base_delay * (2 ** attempt))
+                        continue
+                    raise
+            raise RuntimeError("Unreachable")
 
 
 class RouterClient(BaseProvider):
