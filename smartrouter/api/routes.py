@@ -28,7 +28,9 @@ async def create_chat_completion(
         raise HTTPException(status_code=500, detail=str(e))
 
     try:
-        completion_response, model_id, score = await dispatcher.dispatch(request, shadow_mode=x_smartrouter_shadow)
+        completion_response, model_id, score = await dispatcher.dispatch(
+            request, shadow_mode=x_smartrouter_shadow
+        )
         if isinstance(completion_response, AsyncGenerator):
             headers = {
                 "X-SmartRouter-Model": model_id,

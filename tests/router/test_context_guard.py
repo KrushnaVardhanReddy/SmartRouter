@@ -81,12 +81,17 @@ async def test_compress_context_within_limit():
 @pytest.mark.asyncio
 async def test_compress_context_exceeds_limit_successful_compression():
     messages = [
-        ChatMessage(role="system", content="System"), # index 0
-        ChatMessage(role="user", content="A very very very very very long message that should be removed"), # index 1 - dropped
-        ChatMessage(role="assistant", content="Yes"), # index 2 - kept
-        ChatMessage(role="user", content="Another long one that should be removed to fit"), # index 3 - kept
-        ChatMessage(role="assistant", content="Indeed"), # index 4 - kept
-        ChatMessage(role="user", content="Short user"), # index 5 - kept
+        ChatMessage(role="system", content="System"),  # index 0
+        ChatMessage(
+            role="user",
+            content="A very very very very very long message that should be removed",
+        ),  # index 1 - dropped
+        ChatMessage(role="assistant", content="Yes"),  # index 2 - kept
+        ChatMessage(
+            role="user", content="Another long one that should be removed to fit"
+        ),  # index 3 - kept
+        ChatMessage(role="assistant", content="Indeed"),  # index 4 - kept
+        ChatMessage(role="user", content="Short user"),  # index 5 - kept
     ]
     # Total 6 messages.
     # With new logic, it should drop message at index 1 because we keep last 4.
@@ -100,11 +105,11 @@ async def test_compress_context_exceeds_limit_successful_compression():
     # The summary is inserted. Total messages should be:
     # [system, summary, messages[-4:]] -> length 6
     assert len(compressed) == 6
-    assert compressed[0] == messages[0] # System kept
+    assert compressed[0] == messages[0]  # System kept
     assert compressed[1].content == "[Context Summary] Summary text"
     assert compressed[2] == messages[-4]
-    assert compressed[-1] == messages[-1] # Last user kept
-    assert compressed[-2] == messages[-2] # Last assistant kept
+    assert compressed[-1] == messages[-1]  # Last user kept
+    assert compressed[-2] == messages[-2]  # Last assistant kept
 
 
 @pytest.mark.asyncio
@@ -114,7 +119,11 @@ async def test_compress_context_exceeds_limit_unsuccessful_compression():
         ChatMessage(role="user", content="Old"),
         ChatMessage(role="assistant", content="Old"),
         ChatMessage(role="user", content="Old"),
-        ChatMessage(role="assistant", content="A very very long assistant reply that takes up all the tokens by itself and causes the total limit to still be exceeded even if we drop all older messages." * 10),
+        ChatMessage(
+            role="assistant",
+            content="A very very long assistant reply that takes up all the tokens by itself and causes the total limit to still be exceeded even if we drop all older messages."
+            * 10,
+        ),
         ChatMessage(role="user", content="Short user"),
         ChatMessage(role="assistant", content="Dummy"),
         ChatMessage(role="user", content="Dummy"),
@@ -126,7 +135,9 @@ async def test_compress_context_exceeds_limit_unsuccessful_compression():
         respx_mock.post("http://fake/chat/completions").respond(
             json={"choices": [{"message": {"content": "Summary of old stuff"}}]}
         )
-        compressed = await compress_context(messages, limit, "http://fake", "model", "key")
+        compressed = await compress_context(
+            messages, limit, "http://fake", "model", "key"
+        )
 
     # It should compress down to exactly 6 messages now (system, summary, last 4)
     assert len(compressed) == 6
@@ -163,10 +174,10 @@ async def test_compress_context_summarizes_dropped_messages():
         payload = request.content.decode("utf-8")
         assert "Drop me 1" in payload
         assert "Drop me 2" in payload
-        assert "Keep me 1" not in payload # kept
-        assert "Keep me 2" not in payload # kept
-        assert "Keep me 3" not in payload # kept
-        assert "Keep me 4" not in payload # kept
+        assert "Keep me 1" not in payload  # kept
+        assert "Keep me 2" not in payload  # kept
+        assert "Keep me 3" not in payload  # kept
+        assert "Keep me 4" not in payload  # kept
 
     assert len(compressed) == 6
     assert compressed[1].role == "assistant"

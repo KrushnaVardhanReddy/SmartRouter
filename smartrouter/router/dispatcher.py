@@ -34,11 +34,15 @@ class RouterDispatcher:
         if request.routing_preference == RoutingPreference.frontier_only:
             tier_name = "smart"
             tier_config = self.settings.tiers.smart
-            logger.info("routing_preference=frontier_only: bypassing classifier, routing directly to smart tier.")
+            logger.info(
+                "routing_preference=frontier_only: bypassing classifier, routing directly to smart tier."
+            )
         elif request.routing_preference == RoutingPreference.economy:
             tier_name = "cheap"
             tier_config = self.settings.tiers.cheap
-            logger.info("routing_preference=economy: bypassing classifier, routing directly to cheap tier.")
+            logger.info(
+                "routing_preference=economy: bypassing classifier, routing directly to cheap tier."
+            )
         else:
             # 1. Score the prompt (using the last user message)
             prompt_text = ""
@@ -51,7 +55,9 @@ class RouterDispatcher:
 
             # 2. Check Budget Circuit Breaker
             budget_limit = router_config.budget_limit_usd
-            is_budget_exceeded = budget_limit > 0 and usage_tracker.total_spent_usd >= budget_limit
+            is_budget_exceeded = (
+                budget_limit > 0 and usage_tracker.total_spent_usd >= budget_limit
+            )
 
             # 3. Pick a Tier
             if is_budget_exceeded:
@@ -74,7 +80,9 @@ class RouterDispatcher:
             if not is_budget_exceeded:
                 logger.info(f"Initial routing score: {score:.3f} -> {tier_name} tier")
             else:
-                logger.info(f"Initial routing score: {score:.3f} but budget exceeded. Forced to {tier_name} tier.")
+                logger.info(
+                    f"Initial routing score: {score:.3f} but budget exceeded. Forced to {tier_name} tier."
+                )
 
             # 4. Context Guard Check and Upgrade
             # Resolve summarizer API key (handles both plain str and SecretStr)
@@ -102,7 +110,9 @@ class RouterDispatcher:
                 if token_count <= current_tier_config.max_context_tokens:
                     break
 
-                logger.info(f"Context limit exceeded for '{current_tier_name}' tier. Attempting to compress context.")
+                logger.info(
+                    f"Context limit exceeded for '{current_tier_name}' tier. Attempting to compress context."
+                )
                 compressed = await compress_context(
                     request.messages,
                     current_tier_config.max_context_tokens,
@@ -111,7 +121,10 @@ class RouterDispatcher:
                     summarizer_api_key_str,
                 )
 
-                if get_token_count(compressed) <= current_tier_config.max_context_tokens:
+                if (
+                    get_token_count(compressed)
+                    <= current_tier_config.max_context_tokens
+                ):
                     request.messages = compressed
                     break
 
@@ -123,7 +136,9 @@ class RouterDispatcher:
                     break
 
                 if current_tier_name == "smart":
-                    logger.warning("Context limit exceeded for 'smart' tier. Cannot upgrade further.")
+                    logger.warning(
+                        "Context limit exceeded for 'smart' tier. Cannot upgrade further."
+                    )
                     break
 
                 next_tier_name = tiers_order[tier_index + 1]
@@ -143,7 +158,9 @@ class RouterDispatcher:
                 and tier_name == "cheap"
                 and not is_budget_exceeded
             ):
-                logger.info("JSON mode requested. Upgrading from 'cheap' to 'mid' tier.")
+                logger.info(
+                    "JSON mode requested. Upgrading from 'cheap' to 'mid' tier."
+                )
                 tier_name = "mid"
                 tier_config = self.settings.tiers.mid
             elif (
@@ -152,9 +169,13 @@ class RouterDispatcher:
                 and tier_name == "cheap"
                 and is_budget_exceeded
             ):
-                logger.warning("JSON mode requested, but budget is exceeded. Remaining on 'cheap' tier and hoping for the best.")
+                logger.warning(
+                    "JSON mode requested, but budget is exceeded. Remaining on 'cheap' tier and hoping for the best."
+                )
 
-            logger.info(f"Final selected tier: {tier_name} using model {tier_config.model}")
+            logger.info(
+                f"Final selected tier: {tier_name} using model {tier_config.model}"
+            )
 
             # Shadow mode
             is_shadow = shadow_mode or router_config.shadow_mode

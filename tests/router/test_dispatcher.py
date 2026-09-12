@@ -154,13 +154,19 @@ async def test_dispatch_compresses_before_upgrading_tier(
     # Mock get_token_count to exceed cheap limit (1000) before compression, but fit after
     def mock_get_token_count(messages):
         if messages and messages[0].content == "compressed":
-            return 800       # Fits cheap
+            return 800  # Fits cheap
         return 1500  # Exceeds cheap (1000)
 
     with (
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
-        patch("smartrouter.router.dispatcher.get_token_count", side_effect=mock_get_token_count),
-        patch("smartrouter.router.dispatcher.compress_context", return_value=[ChatMessage(role="user", content="compressed")])
+        patch(
+            "smartrouter.router.dispatcher.get_token_count",
+            side_effect=mock_get_token_count,
+        ),
+        patch(
+            "smartrouter.router.dispatcher.compress_context",
+            return_value=[ChatMessage(role="user", content="compressed")],
+        ),
     ):
         instance = MockClient.return_value
         instance.generate = AsyncMock(return_value=dummy_response)
@@ -182,13 +188,19 @@ async def test_dispatch_upgrades_after_compression_fails(
     # Mock get_token_count to exceed cheap limit (1000) even after compression, but fit mid (4000)
     def mock_get_token_count(messages):
         if messages and messages[0].content == "compressed":
-            return 1500      # Exceeds cheap, fits mid
+            return 1500  # Exceeds cheap, fits mid
         return 2000  # Exceeds cheap
 
     with (
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
-        patch("smartrouter.router.dispatcher.get_token_count", side_effect=mock_get_token_count),
-        patch("smartrouter.router.dispatcher.compress_context", return_value=[ChatMessage(role="user", content="compressed")])
+        patch(
+            "smartrouter.router.dispatcher.get_token_count",
+            side_effect=mock_get_token_count,
+        ),
+        patch(
+            "smartrouter.router.dispatcher.compress_context",
+            return_value=[ChatMessage(role="user", content="compressed")],
+        ),
     ):
         instance = MockClient.return_value
         instance.generate = AsyncMock(return_value=dummy_response)
@@ -233,7 +245,9 @@ async def test_dispatch_shadow_mode_forces_smart_tier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        response, model_id, score = await dispatcher.dispatch(dummy_request, shadow_mode=True)
+        response, model_id, score = await dispatcher.dispatch(
+            dummy_request, shadow_mode=True
+        )
 
         assert response == dummy_response
         assert model_id == "smart-model"
@@ -303,6 +317,7 @@ async def test_dispatch_fallback_exhausted(
         assert MockClient.call_args_list[1][1]["config"].model == "mid-model"
         assert MockClient.call_args_list[2][1]["config"].model == "cheap-model"
 
+
 @pytest.mark.asyncio
 async def test_dispatch_budget_circuit_breaker(
     mock_settings, mock_classifier, dummy_request, dummy_response
@@ -314,7 +329,7 @@ async def test_dispatch_budget_circuit_breaker(
         patch("smartrouter.router.dispatcher.RouterClient") as MockClient,
         patch("smartrouter.router.dispatcher.usage_tracker") as mock_usage_tracker,
     ):
-        mock_usage_tracker.total_spent_usd = 15.0 # Exceeds budget
+        mock_usage_tracker.total_spent_usd = 15.0  # Exceeds budget
 
         instance = MockClient.return_value
         instance.generate = AsyncMock(return_value=dummy_response)
@@ -323,10 +338,11 @@ async def test_dispatch_budget_circuit_breaker(
         response, model_id, score = await dispatcher.dispatch(dummy_request)
 
         assert response == dummy_response
-        assert model_id == "cheap-model" # Forced to cheap
+        assert model_id == "cheap-model"  # Forced to cheap
         assert score == 0.9
         MockClient.assert_called_once()
         assert MockClient.call_args[1]["config"].model == "cheap-model"
+
 
 @pytest.mark.asyncio
 async def test_dispatch_frontier_only_bypasses_classifier(
@@ -340,7 +356,7 @@ async def test_dispatch_frontier_only_bypasses_classifier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        response, model_id, score = await dispatcher.dispatch(dummy_request)
+        _response, model_id, _score = await dispatcher.dispatch(dummy_request)
 
         assert model_id == "smart-model"
         assert MockClient.call_args[1]["config"].model == "smart-model"
@@ -359,7 +375,7 @@ async def test_dispatch_economy_bypasses_classifier(
         instance.generate = AsyncMock(return_value=dummy_response)
 
         dispatcher = RouterDispatcher()
-        response, model_id, score = await dispatcher.dispatch(dummy_request)
+        _response, model_id, _score = await dispatcher.dispatch(dummy_request)
 
         assert model_id == "cheap-model"
         assert MockClient.call_args[1]["config"].model == "cheap-model"

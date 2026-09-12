@@ -52,7 +52,6 @@ GOLDEN_DATASET = [
         "prompt": "Write a short, polite email to my boss asking for next Friday off for a personal day.",
         "complexity": 0,
     },
-
     # Complex prompts (expensive) - 1. Coding, logic, deep analysis, large context.
     {
         "prompt": "I need to build a highly concurrent web scraper in Go. The scraper needs to read a list of 10,000 URLs from a PostgreSQL database, fetch the HTML, extract all the <a> tags using a robust DOM parser, and save the unique outbound links back to the database. It MUST handle rate limiting (max 50 req/sec), respect robots.txt, use a distributed pool of rotating proxies, and gracefully shut down on SIGINT. Please provide the complete architecture, database schema, and the core Go implementation using goroutines and channels.",
@@ -95,6 +94,7 @@ GOLDEN_DATASET = [
         "complexity": 1,
     },
 ]
+
 
 def main() -> None:
     model_path = "models/complexity_classifier.pkl"

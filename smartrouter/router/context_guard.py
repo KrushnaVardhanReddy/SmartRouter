@@ -84,20 +84,23 @@ async def compress_context(
 
     try:
         async with AsyncClient() as client:
-            response = await client.post(endpoint, json=payload, headers=headers, timeout=10.0)
+            response = await client.post(
+                endpoint, json=payload, headers=headers, timeout=10.0
+            )
             response.raise_for_status()
             response_data = response.json()
             summary = response_data["choices"][0]["message"]["content"]
 
             # Insert the summary as a synthetic assistant message
             summary_message = ChatMessage(
-                role="assistant",
-                content=f"[Context Summary] {summary}"
+                role="assistant", content=f"[Context Summary] {summary}"
             )
             compressed_messages.insert(1, summary_message)
 
     except Exception as e:
-        logger.warning(f"Failed to summarize dropped messages. Falling back to naive trimming. Error: {e}")
+        logger.warning(
+            f"Failed to summarize dropped messages. Falling back to naive trimming. Error: {e}"
+        )
         # Return the naively compressed messages without the summary
 
     return compressed_messages

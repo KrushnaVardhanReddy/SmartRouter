@@ -8,6 +8,7 @@ def test_usage_tracker_initial_state():
     assert tracker.hypothetical_spent_usd == 0.0
     assert tracker.total_saved_usd == 0.0
 
+
 def test_usage_tracker_record_usage():
     tracker = UsageTracker()
 
@@ -23,6 +24,7 @@ def test_usage_tracker_record_usage():
     assert tracker.hypothetical_spent_usd == 0.04
     # Total saved should only increase if hypothetical > actual
     assert tracker.total_saved_usd == 0.019
+
 
 def test_usage_tracker_clear():
     tracker = UsageTracker()
