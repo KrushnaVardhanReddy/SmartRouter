@@ -1,0 +1,35 @@
+TASK: P2-T3 — Context Window Guard Utility
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Create a standalone utility module that evaluates the token size of an
+incoming request and determines if it exceeds the `max_context_tokens`
+of a given tier, throwing a custom exception or returning a flag so
+the router can upgrade the tier.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/context_guard.py`
+- Do NOT modify `main.py` or any other existing files.
+- Create a function `estimate_token_count(messages: list[ChatMessage]) -> int`.
+- Since we don't want to add a heavy tokenizer like `tiktoken` just for estimating, use a simple heuristic: 1 token ≈ 4 characters of text.
+- Create a function `check_context_limit(messages: list[ChatMessage], max_tokens: int | None) -> bool`. Returns `True` if safe, `False` if it exceeds the limit.
+- Provide a Pytest suite in `tests/router/test_context_guard.py`.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION HINTS
+═══════════════════════════════════════════════════════════════
+- The tokenizer heuristic should count the characters in the `content` field of all messages, divide by 4, and add 5 tokens per message for overhead.
+
+═══════════════════════════════════════════════════════════════
+FILES LIST
+═══════════════════════════════════════════════════════════════
+
+FILES TO CREATE:
+- smartrouter/router/context_guard.py
+- tests/router/test_context_guard.py
+
+Commit: "jules: implement context window guard utility"
+Target branch: feature/dev
