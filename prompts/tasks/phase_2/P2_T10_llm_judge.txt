@@ -1,0 +1,26 @@
+TASK: P2-T10 — Implement LLM-as-a-Judge for Complexity Labeling
+
+═══════════════════════════════════════════════════════════════
+BACKGROUND & CONTEXT
+═══════════════════════════════════════════════════════════════
+We are building a Dynamic LLM Router (SmartRouter) that intercepts user prompts and routes them to either a "Cheap" model (like Llama-3-8B) or a "Smart/Frontier" model (like GPT-4) based on the semantic complexity of the prompt.
+To do this, we use an embedded Machine Learning pipeline (`SentenceTransformer` + `LogisticRegression`). 
+However, our classifier is currently stuck at 60% accuracy! 
+Why? Because our training data (`scripts/seed_training_data.py`) relies on Chatbot Arena "winner" labels or simplistic keyword heuristics (e.g. checking if "def" is in the string). These are incredibly noisy proxies for complexity.
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+Your task is to completely rewrite the labeling logic in `scripts/seed_training_data.py` to use an "LLM-as-a-Judge" pipeline. This is the industry standard for generating high-quality training labels. By having a capable LLM (like `gpt-4o-mini`) rigorously judge the actual computational/reasoning complexity of each prompt, we will generate perfectly clean labels (`0` for Simple, `1` for Complex). This clean dataset will allow our downstream Logistic Regression model to easily hit 90%+ accuracy.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+1. Use the `openai` python package (run `uv add openai` to install it) or standard `httpx` to evaluate prompt complexity by making API calls to `gpt-4o-mini`.
+2. Write a rigorous system prompt (Rubric) instructing the LLM to score complexity as 0 (Simple) or 1 (Complex) based on:
+   - Reasoning depth / logic required
+   - Strictness of constraints (e.g. JSON schema enforcement)
+   - Domain knowledge needed (e.g. casual chat vs. low-level systems programming)
+3. Ensure the script gracefully handles missing `OPENAI_API_KEY` by falling back to a dummy label or skipping the row, but ideally, use a mock or the actual API if the key is present in your environment.
+4. Set the default `max_samples` to something small (like 100 or 200) so that running the LLM-as-a-Judge pipeline doesn't take hours and cost too much during testing.
+5. Save the updated script and commit the changes!
