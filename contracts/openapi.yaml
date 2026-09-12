@@ -19,10 +19,30 @@ paths:
       responses:
         '200':
           description: Successful response
+          headers:
+            X-SmartRouter-Model:
+              schema:
+                type: string
+              description: The internal model that the router decided to use
+            X-SmartRouter-Score:
+              schema:
+                type: number
+              description: The complexity score (0.0 to 1.0)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatCompletionResponse'
+  /usage:
+    get:
+      summary: Get router cost savings report
+      operationId: getUsageReport
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageReportResponse'
 components:
   schemas:
     ChatMessage:
@@ -111,3 +131,23 @@ components:
         - created
         - model
         - choices
+
+    UsageReportResponse:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        total_spent_usd:
+          type: number
+        hypothetical_spent_usd:
+          type: number
+        total_saved_usd:
+          type: number
+        shadow_mode_active:
+          type: boolean
+      required:
+        - total_requests
+        - total_spent_usd
+        - hypothetical_spent_usd
+        - total_saved_usd
+        - shadow_mode_active

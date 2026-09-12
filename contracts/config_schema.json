@@ -13,6 +13,22 @@
         "high_threshold": {
           "type": "number",
           "default": 0.8
+        },
+        "shadow_mode": {
+          "type": "boolean",
+          "default": false
+        },
+        "context_compression": {
+          "type": "boolean",
+          "default": false
+        },
+        "pii_redaction": {
+          "type": "boolean",
+          "default": false
+        },
+        "jailbreak_blocking": {
+          "type": "boolean",
+          "default": false
         }
       },
       "required": ["low_threshold", "high_threshold"]
@@ -35,7 +51,8 @@
         "base_url": { "type": "string" },
         "model": { "type": "string" },
         "api_key": { "type": "string" },
-        "timeout_seconds": { "type": "integer", "default": 30 }
+        "timeout_seconds": { "type": "integer", "default": 30 },
+        "max_context_tokens": { "type": "integer" }
       },
       "required": ["base_url", "model"]
     }
