@@ -24,6 +24,7 @@ class RouterConfig(BaseModel):
     low_threshold: float = 0.4
     high_threshold: float = 0.8
     shadow_mode: bool = False
+    budget_limit_usd: float = 0.0
 
 
 class TiersConfig(BaseModel):
