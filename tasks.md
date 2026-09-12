@@ -41,7 +41,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
 - [ ] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
 - [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
-- [ ] MCP Server (`/.well-known/mcp/`) for native agent tool integration
+- [ ] **MCP Integration (`osmcp`):** Provide secure OS/Git capabilities to the local nano models via the Model Context Protocol
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
 - [ ] **E2E Testing:** Verify retries, load balancing, fallback chains, and circuit breakers (no mocking)
 
