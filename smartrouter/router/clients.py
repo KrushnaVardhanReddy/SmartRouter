@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import os
+from collections.abc import AsyncGenerator
 
 import httpx
 
@@ -106,3 +107,34 @@ class RouterClient(BaseProvider):
 
             data = response.json()
             return ChatCompletionResponse(**data)
+
+    async def stream_generate(
+        self, request: ChatCompletionRequest
+    ) -> AsyncGenerator[str]:
+        """
+        Forward the request to the configured provider as a stream.
+        """
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if self.config.api_key:
+            headers["Authorization"] = f"Bearer {self.config.api_key}"
+
+        if "anthropic" in self.config.base_url.lower():
+            headers["anthropic-version"] = "2023-06-01"
+
+        # The router dictates the actual model being used for the backend provider
+        request.model = self.config.model
+
+        payload = request.model_dump(exclude_none=True)
+
+        async with httpx.AsyncClient() as client, client.stream(
+            "POST",
+            self.config.base_url,
+            json=payload,
+            headers=headers,
+            timeout=self.config.timeout_seconds,
+        ) as response:
+            response.raise_for_status()
+            async for chunk in response.aiter_text():
+                yield chunk
