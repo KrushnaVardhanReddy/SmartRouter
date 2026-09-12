@@ -1,8 +1,13 @@
 openapi: 3.0.3
 info:
   title: SmartRouter API
-  description: OpenAI-compatible API proxy router
-  version: 1.0.0
+  description: |
+    OpenAI-compatible LLM routing proxy. SmartRouter intercepts chat completion
+    requests, scores them with an ML classifier, and routes them to the most
+    cost-effective model tier. Supports shadow mode, PII redaction, jailbreak
+    blocking, semantic caching, context compression with rolling summarization,
+    budget circuit breaking, and per-request routing preference overrides.
+  version: 0.3.0
 servers:
   - url: http://localhost:8080/v1
 paths:
@@ -69,7 +74,8 @@ components:
       properties:
         model:
           type: string
-          description: "ID of the model to use. SmartRouter intercepts this."
+          nullable: true
+          description: "ID of the model to use. SmartRouter intercepts this and routes to the optimal tier."
         messages:
           type: array
           items:
@@ -84,13 +90,32 @@ components:
           type: boolean
           default: false
         response_format:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: [text, json_object]
+          $ref: '#/components/schemas/ResponseFormat'
+          nullable: true
+        routing_preference:
+          $ref: '#/components/schemas/RoutingPreference'
       required:
         - messages
+
+    ResponseFormat:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [text, json_object]
+          default: text
+      required:
+        - type
+
+    RoutingPreference:
+      type: string
+      enum: [auto, frontier_only, economy]
+      default: auto
+      description: |
+        Controls how SmartRouter selects a tier for this request.
+        - `auto` (default): ML classifier selects the optimal tier.
+        - `frontier_only`: Always routes to the Smart (most capable) tier, bypassing the classifier.
+        - `economy`: Always routes to the Cheap tier, bypassing the classifier.
 
     ChatCompletionChoice:
       type: object
@@ -150,14 +175,19 @@ components:
       properties:
         total_requests:
           type: integer
+          description: Total number of requests routed since startup.
         total_spent_usd:
           type: number
+          description: Actual cumulative spend in USD.
         hypothetical_spent_usd:
           type: number
+          description: What spend would have been if all requests went to the Smart tier.
         total_saved_usd:
           type: number
+          description: Savings achieved (hypothetical minus actual).
         shadow_mode_active:
           type: boolean
+          description: Whether shadow mode is currently enabled globally.
       required:
         - total_requests
         - total_spent_usd

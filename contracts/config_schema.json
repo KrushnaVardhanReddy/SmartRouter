@@ -1,50 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SmartRouterConfig",
+  "description": "Configuration schema for smartrouter.yaml",
   "type": "object",
   "properties": {
     "router": {
       "type": "object",
+      "description": "Core routing behaviour settings.",
       "properties": {
         "low_threshold": {
           "type": "number",
-          "default": 0.4
+          "default": 0.4,
+          "description": "Complexity score below which requests are routed to the cheap tier."
         },
         "high_threshold": {
           "type": "number",
-          "default": 0.8
+          "default": 0.8,
+          "description": "Complexity score above which requests are routed to the smart tier."
         },
         "shadow_mode": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "If true, all requests are routed to the smart tier but savings are still calculated (monitor mode)."
         },
-        "context_compression": {
-          "type": "boolean",
-          "default": false
-        },
-        "pii_redaction": {
-          "type": "boolean",
-          "default": false
-        },
-        "jailbreak_blocking": {
-          "type": "boolean",
-          "default": false
-        },
-        "semantic_caching": {
-          "type": "boolean",
-          "default": false
-        },
-        "mcp_server_url": {
-          "type": "string"
+        "budget_limit_usd": {
+          "type": "number",
+          "default": 0.0,
+          "description": "Hard spend limit in USD. Once exceeded, all requests are forced to the cheap tier. 0.0 = unlimited."
         }
       },
       "required": ["low_threshold", "high_threshold"]
     },
     "tiers": {
       "type": "object",
+      "description": "Configuration for each routing tier (cheap, mid, smart).",
       "properties": {
         "cheap": { "$ref": "#/definitions/TierConfig" },
-        "mid": { "$ref": "#/definitions/TierConfig" },
+        "mid":   { "$ref": "#/definitions/TierConfig" },
         "smart": { "$ref": "#/definitions/TierConfig" }
       },
       "required": ["cheap", "mid", "smart"]
@@ -54,12 +46,35 @@
   "definitions": {
     "TierConfig": {
       "type": "object",
+      "description": "Configuration for a single LLM tier.",
       "properties": {
-        "base_url": { "type": "string" },
-        "model": { "type": "string" },
-        "api_key": { "type": "string" },
-        "timeout_seconds": { "type": "integer", "default": 30 },
-        "max_context_tokens": { "type": "integer" }
+        "base_url": {
+          "type": "string",
+          "description": "Base URL of the LLM provider (e.g. https://openrouter.ai/api/v1)."
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier to use for this tier."
+        },
+        "api_key": {
+          "type": "string",
+          "description": "API key for this provider. Supports env-var expansion (e.g. $OPENROUTER_API_KEY)."
+        },
+        "api_keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of API keys for round-robin load balancing across multiple keys."
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "default": 30,
+          "description": "Request timeout in seconds."
+        },
+        "max_context_tokens": {
+          "type": "integer",
+          "nullable": true,
+          "description": "Maximum context window size in tokens for this tier. Used for capacity-aware routing."
+        }
       },
       "required": ["base_url", "model"]
     }
