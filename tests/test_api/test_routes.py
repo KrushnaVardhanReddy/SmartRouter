@@ -86,3 +86,63 @@ async def test_get_usage_report(async_client: AsyncClient):
 
     parsed = UsageReportResponse.model_validate(data)
     assert parsed.total_requests == 0
+@pytest.fixture
+def mock_provider_api_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+
+@pytest.mark.asyncio
+async def test_chat_completions_e2e(
+    async_client: AsyncClient, mock_provider_api_keys: None
+) -> None:
+    request_payload = {
+        "model": "openai/gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": "What is the capital of France?"}],
+    }
+
+    mock_response_payload = {
+        "id": "chatcmpl-e2e",
+        "object": "chat.completion",
+        "created": 1677652289,
+        "model": "dummy-model",
+        "choices": [
+            {
+                "index": 0,
+                "message": {"role": "assistant", "content": "Paris"},
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
+    }
+
+    import respx
+    from httpx import Response
+
+    with respx.mock(assert_all_called=False, base_url=None) as respx_mock:
+        # Mock the URLs from smartrouter.yaml
+        respx_mock.route(host="api.groq.com").mock(
+            return_value=Response(200, json=mock_response_payload)
+        )
+        respx_mock.route(host="api.openai.com").mock(
+            return_value=Response(200, json=mock_response_payload)
+        )
+        # Pass through huggingface requests for model downloads
+        respx_mock.route(host="huggingface.co").pass_through()
+        respx_mock.route(host="test").pass_through()
+
+        response = await async_client.post("/v1/chat/completions", json=request_payload)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["object"] == "chat.completion"
+        assert data["choices"][0]["message"]["content"] == "Paris"
+
+        # Verify headers were injected by the real dispatcher
+        assert "x-smartrouter-model" in response.headers
+        assert "x-smartrouter-score" in response.headers
+
+        # The score should be parsable as a float
+        score_str = response.headers["x-smartrouter-score"]
+        score = float(score_str)
+        assert 0.0 <= score <= 1.0
