@@ -16,7 +16,9 @@ class RouterDispatcher:
         self.settings = get_settings()
         self.classifier = ClassifierEngine()
 
-    async def dispatch(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+    async def dispatch(
+        self, request: ChatCompletionRequest
+    ) -> tuple[ChatCompletionResponse, str, float]:
         # 1. Score the prompt (using the last user message)
         prompt_text = ""
         for message in reversed(request.messages):
@@ -79,7 +81,8 @@ class RouterDispatcher:
 
             try:
                 logger.info(f"Attempting dispatch with tier: {current_tier}")
-                return await client.generate(request)
+                response = await client.generate(request)
+                return response, current_config.model, score
             except httpx.HTTPStatusError as e:
                 status_code = e.response.status_code
                 if 500 <= status_code < 600:

@@ -1,9 +1,5 @@
-import httpx
 import pytest
-import respx
 from httpx import AsyncClient
-
-from smartrouter.api.models import ChatCompletionResponse
 
 
 @pytest.fixture
@@ -12,7 +8,9 @@ def mock_openrouter_api_key(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_chat_completions_route(async_client: AsyncClient, mock_openrouter_api_key):
+async def test_chat_completions_route(
+    async_client: AsyncClient, mock_openrouter_api_key
+):
     request_payload = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [{"role": "user", "content": "Hello!"}],
@@ -33,10 +31,17 @@ async def test_chat_completions_route(async_client: AsyncClient, mock_openrouter
         "usage": {"prompt_tokens": 9, "completion_tokens": 12, "total_tokens": 21},
     }
 
-    with respx.mock(assert_all_called=True) as respx_mock:
-        respx_mock.post("https://openrouter.ai/api/v1/chat/completions").mock(
-            return_value=httpx.Response(200, json=mock_response_payload)
-        )
+    from unittest.mock import AsyncMock, patch
+
+    from smartrouter.api.models import (
+        ChatCompletionResponse as ChatCompletionResponseModel,
+    )
+
+    mock_resp = ChatCompletionResponseModel.model_validate(mock_response_payload)
+
+    with patch("smartrouter.api.routes.RouterDispatcher") as MockDispatcher:
+        instance = MockDispatcher.return_value
+        instance.dispatch = AsyncMock(return_value=(mock_resp, "test-model-id", 0.85))
 
         response = await async_client.post("/v1/chat/completions", json=request_payload)
 
@@ -46,8 +51,12 @@ async def test_chat_completions_route(async_client: AsyncClient, mock_openrouter
         assert data["choices"][0]["message"]["content"] == "Hello there!"
         assert data["id"] == "chatcmpl-123"
 
+        # Verify headers were injected
+        assert response.headers["x-smartrouter-model"] == "test-model-id"
+        assert response.headers["x-smartrouter-score"] == "0.850"
+
         # Verify it parses correctly into the response model
-        parsed = ChatCompletionResponse(**data)
+        parsed = ChatCompletionResponseModel(**data)
         assert parsed.object == "chat.completion"
 
 
