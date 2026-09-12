@@ -58,7 +58,14 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Persistent System Prompt Injection (append/prepend from config)
 - [ ] **E2E Testing:** Verify guardrails, RAG injection, and OTEL traces end-to-end
 
-## Phase 5 (v1.0): Open Source Launch & Distribution
+## Phase 5 (v0.5): Enterprise Competitive Parity
+*Goal: Close feature gaps with enterprise competitors (Kilo, RouteLLM, Latitude).*
+
+- [ ] **Session-Aware Routing:** Track context across multi-turn conversational sessions to make better holistic routing decisions (Gap vs. Kilo)
+- [ ] **Preference-Based Routing Engine:** Use Chatbot Arena Elo ratings / human preference data rather than naive complexity scoring (Gap vs. RouteLLM)
+- [ ] **Domain-Specific Benchmarking:** Create specialized routing profiles/benchmarks for coding and structured tasks (Gap vs. Kilo)
+
+## Phase 6 (v1.0): Open Source Launch & Distribution
 *Goal: Frictionless adoption for the community.*
 
 - [ ] `smartrouter` CLI (commands: `start`, `export`, `import`)
