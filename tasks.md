@@ -39,6 +39,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [ ] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [ ] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
 - [ ] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
+- [ ] **Pattern-Based Routing:** User-configurable regex/keywords (e.g., "git", "bash") to force-route to local nano models
 - [ ] Fallback Chain (auto-retry next tier if the current tier completely fails)
 - [ ] MCP Server (`/.well-known/mcp/`) for native agent tool integration
 - [ ] Create multi-stage `Dockerfile` (optimized for ML dependencies)
