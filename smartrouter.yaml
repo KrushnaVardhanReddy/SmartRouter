@@ -1,0 +1,49 @@
+# SmartRouter (DynamicLlmRouting) Configuration
+# This file defines the default settings for routing logic and tiers.
+# You can customize these values or override them with environment variables.
+
+router:
+  # low_threshold determines the complexity score below which a query goes to the cheap tier
+  low_threshold: 0.4
+  # high_threshold determines the complexity score above which a query goes to the smart tier
+  high_threshold: 0.8
+  # shadow_mode allows routing evaluation without modifying the standard response
+  shadow_mode: false
+
+# Configure API details for each tier. Use ${ENV_VAR} to load from environment.
+tiers:
+  cheap:
+    base_url: https://api.groq.com/openai/v1
+    model: llama3-8b-8192
+    api_key: ${GROQ_API_KEY}
+    timeout_seconds: 15
+
+  mid:
+    base_url: https://api.groq.com/openai/v1
+    model: llama3-70b-8192
+    api_key: ${GROQ_API_KEY}
+    timeout_seconds: 30
+
+  smart:
+    base_url: https://api.openai.com/v1
+    model: gpt-4o
+    api_key: ${OPENAI_API_KEY}
+    timeout_seconds: 60
+
+# =====================================================================
+# Pattern Routing (Optional / Experimental)
+# =====================================================================
+# You can optionally route specific queries instantly based on regex patterns.
+# Uncomment the block below to enable and customize it.
+#
+# pattern_routing:
+#   # Route basic terminal/bash commands to a local nano model
+#   - pattern: "^(git|bash|grep|ls|pwd)"
+#     tier: cheap
+#     override_model: "gemma-2b-it"
+#     override_base_url: "http://localhost:11434/v1"
+#
+#   # Route DB/SQL tasks to a mid-tier model known for SQL
+#   - pattern: "(?i)(SQL|SELECT|INSERT|UPDATE|DELETE)"
+#     tier: mid
+#     override_model: "mixtral-8x7b-32768"
