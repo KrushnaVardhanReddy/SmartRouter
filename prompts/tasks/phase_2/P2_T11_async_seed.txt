@@ -1,0 +1,28 @@
+TASK: P2-T11 — Async Seed Script & 10k Run
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+The current `scripts/seed_training_data.py` successfully uses LLM-as-a-judge to score prompts. However, it runs synchronously. To process our target of 10,000 rows without taking 3 hours, we need to convert it to use `asyncio` and `AsyncOpenAI`.
+
+Once refactored, run the script to generate the massive 10,000-row `training_seed.jsonl` dataset and commit it.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `scripts/seed_training_data.py`
+- Target file: `data/training_seed.jsonl` (Generated)
+- Use `asyncio.Semaphore(20)` to limit concurrent requests.
+- Implement a manual exponential backoff (or use `tenacity` if installed) in the async function to gracefully handle `429 Too Many Requests`.
+- Set `max_samples=10000` when loading the parquet dataset.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. Update `seed_training_data.py`:
+   - Change `openai.OpenAI` to `openai.AsyncOpenAI`.
+   - Update `evaluate_complexity_with_llm` to be an `async def`.
+   - Add a retry loop catching `openai.RateLimitError` that sleeps with exponential backoff.
+   - Refactor `process_dataset` to launch tasks concurrently using `asyncio.gather`.
+2. Run `uv run python scripts/seed_training_data.py` to generate the 10,000 dataset rows.
+3. Commit the updated script AND the new `data/training_seed.jsonl` file.
