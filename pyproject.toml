@@ -19,7 +19,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "datasets>=5.0.1",
     "mypy>=2.3.1",
+    "pandas>=3.0.5",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "respx>=0.23.1",
