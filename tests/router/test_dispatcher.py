@@ -9,6 +9,7 @@ from smartrouter.api.models import (
     ChatCompletionResponse,
     ChatMessage,
     ResponseFormat,
+    RoutingPreference,
 )
 from smartrouter.router.dispatcher import RouterDispatcher
 
@@ -326,6 +327,44 @@ async def test_dispatch_budget_circuit_breaker(
         assert score == 0.9
         MockClient.assert_called_once()
         assert MockClient.call_args[1]["config"].model == "cheap-model"
+
+@pytest.mark.asyncio
+async def test_dispatch_frontier_only_bypasses_classifier(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    dummy_request.routing_preference = RoutingPreference.frontier_only
+    mock_classifier.score_prompt.return_value = 0.1  # normally cheap
+
+    with patch("smartrouter.router.dispatcher.RouterClient") as MockClient:
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        response, model_id, score = await dispatcher.dispatch(dummy_request)
+
+        assert model_id == "smart-model"
+        assert MockClient.call_args[1]["config"].model == "smart-model"
+        mock_classifier.score_prompt.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_dispatch_economy_bypasses_classifier(
+    mock_settings, mock_classifier, dummy_request, dummy_response
+):
+    dummy_request.routing_preference = RoutingPreference.economy
+    mock_classifier.score_prompt.return_value = 0.95  # normally smart
+
+    with patch("smartrouter.router.dispatcher.RouterClient") as MockClient:
+        instance = MockClient.return_value
+        instance.generate = AsyncMock(return_value=dummy_response)
+
+        dispatcher = RouterDispatcher()
+        response, model_id, score = await dispatcher.dispatch(dummy_request)
+
+        assert model_id == "cheap-model"
+        assert MockClient.call_args[1]["config"].model == "cheap-model"
+        mock_classifier.score_prompt.assert_not_called()
+
 
 @pytest.mark.asyncio
 async def test_cost_recorded_after_dispatch(
