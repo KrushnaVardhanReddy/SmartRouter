@@ -17,18 +17,21 @@ tiers:
     model: llama3-8b-8192
     api_key: ${GROQ_API_KEY}
     timeout_seconds: 15
+    cost_per_1k_tokens: 0.001
 
   mid:
     base_url: https://api.groq.com/openai/v1
     model: llama3-70b-8192
     api_key: ${GROQ_API_KEY}
     timeout_seconds: 30
+    cost_per_1k_tokens: 0.005
 
   smart:
     base_url: https://api.openai.com/v1
     model: gpt-4o
     api_key: ${OPENAI_API_KEY}
     timeout_seconds: 60
+    cost_per_1k_tokens: 0.02
 
 # =====================================================================
 # Pattern Routing (Optional / Experimental)

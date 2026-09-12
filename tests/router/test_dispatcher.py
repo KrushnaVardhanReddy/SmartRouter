@@ -35,6 +35,10 @@ def mock_settings():
         settings.tiers.smart.base_url = "http://smart.com"
         settings.tiers.smart.max_context_tokens = 8000
 
+        settings.tiers.cheap.cost_per_1k_tokens = 0.001
+        settings.tiers.mid.cost_per_1k_tokens = 0.005
+        settings.tiers.smart.cost_per_1k_tokens = 0.02
+
         mock_get_settings.return_value = settings
         yield mock_get_settings
 
