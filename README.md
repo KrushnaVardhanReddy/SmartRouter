@@ -111,19 +111,21 @@ The API contract is the **single source of truth** shared between the server (ba
 
 ## IDE Integration (Cursor, VS Code, Antigravity)
 
-Because SmartRouter exposes a standard OpenAI-compatible API, you can point any modern AI coding assistant to your local router to instantly save on API costs during development.
+Because SmartRouter exposes a standard OpenAI-compatible API, you can point any modern AI coding assistant to your router to instantly save on API costs during development. 
+
+*Note: Use `http://localhost:8080/v1` if you are self-hosting via Docker, or `https://api.smartrouter.dev/v1` if you are using the managed Cloud SaaS.*
 
 ### 1. Cursor IDE
 1. Open Cursor Settings (⚙️) > **Models**.
-2. Under **OpenAI API Key**, enter a dummy key (e.g., `sk-smartrouter`).
-3. Under **OpenAI Base URL**, click "Override" and enter: `http://localhost:8080/v1`
+2. Under **OpenAI API Key**, enter your key (e.g., `sk-smartrouter-xxx`).
+3. Under **OpenAI Base URL**, click "Override" and enter: `https://api.smartrouter.dev/v1` (or localhost).
 4. Type `smartrouter-auto` in the model dropdown to let SmartRouter dynamically pick the best model for your edit.
 
 ### 2. Antigravity / Kiro
 If you are using Antigravity, you can override the LLM provider in your `~/.gemini/config/mcp_config.json` or environment variables:
 ```bash
-export OPENAI_API_KEY="sk-smartrouter"
-export OPENAI_BASE_URL="http://localhost:8080/v1"
+export OPENAI_API_KEY="sk-smartrouter-xxx"
+export OPENAI_BASE_URL="https://api.smartrouter.dev/v1"
 ```
 
 ### 3. VS Code (Continue.dev / Cline)
@@ -135,8 +137,8 @@ In your `config.json` for Continue or Cline, add SmartRouter as a custom OpenAI 
       "title": "SmartRouter (Dynamic)",
       "provider": "openai",
       "model": "smartrouter-auto",
-      "apiKey": "sk-smartrouter",
-      "apiBase": "http://localhost:8080/v1"
+      "apiKey": "sk-smartrouter-xxx",
+      "apiBase": "https://api.smartrouter.dev/v1"
     }
   ]
 }
