@@ -27,7 +27,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] Add `GET /v1/usage` (cost savings report endpoint)
 - [x] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
 - [x] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
-- [ ] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
+- [x] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
 *Goal: Make it stable for production environments and maximize cost savings.*
