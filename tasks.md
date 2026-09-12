@@ -28,6 +28,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] **Golden Dataset Eval:** Script (`eval_classifier.py`) to measure precision, recall, and false positive rates
 - [x] **Seed Training Data:** Script (`seed_training_data.py`) to fetch HuggingFace Chatbot Arena preference data for initial training
 - [ ] (Jules) **LLM-as-a-Judge Labeling:** Rewrite seed data script to use `gpt-4o-mini` to score prompt complexity for perfectly clean training labels (P2-T10)
+- [ ] (Jules) **Async Pipeline Refactor:** Convert seed script to use asyncio/Semaphore and generate 10,000 JSONL rows (P2-T11)
 - [x] **E2E Testing:** Verify classifier and dynamic routing end-to-end (no mocking)
 
 ## Phase 3 (v0.3): Enterprise Optimization & Resilience
@@ -43,6 +44,7 @@ Tasks assigned to Jules (Tier 2) are marked with `(Jules)`.
 - [x] Budget Circuit Breaker (hard cost limits and auto-downshifting tiers)
 - [x] **Context-Aware Capacity Routing:** Use token count as a primary routing signal alongside complexity score — probe each tier's token limit locally before dispatching, and cascade through tiers until one can handle the request
 - [ ] **Summary-Based Complexity Scoring:** Update the ML dispatcher to embed `[Chat Summary] + [Final Prompt]` rather than just the final prompt, giving the ML classifier true context-awareness (P3-T14)
+- [ ] (Jules) **Dispatcher Architecture Refactor:** Modularize `dispatcher.py` and fix the streaming usage tracking bug and hardcoded cost maps (P3-T15)
 - [ ] **`routing_preference` Flag (Force Frontier / Economy):** Per-request field (`frontier_only` | `economy` | `auto`) to pin routing to a specific tier class, bypassing the ML classifier entirely
 - [x] **API Key Load Balancing:** Round-robin across multiple API keys for the same provider
 - [x] **Advanced Retries:** Exponential backoff for transient 429/5xx errors before failing over
