@@ -1,0 +1,36 @@
+TASK: P3-T15 — Dispatcher Architecture Refactor & Bug Fixes
+
+═══════════════════════════════════════════════════════════════
+OBJECTIVE
+═══════════════════════════════════════════════════════════════
+The current `smartrouter/router/dispatcher.py` handles routing logic but suffers from a monolithic design (a 200+ line `dispatch` method) and several technical debt items. 
+
+Your objective is to safely refactor `dispatcher.py` to be more modular and address three critical bugs/missing features: Streaming Usage Tracking, Hardcoded Cost Maps, and Summary-Based Complexity Scoring.
+
+═══════════════════════════════════════════════════════════════
+CONSTRAINTS & RULES
+═══════════════════════════════════════════════════════════════
+- Target file: `smartrouter/router/dispatcher.py`
+- Target file: `smartrouter/api/models.py` (if needed for tracking usage)
+- Target file: `contracts/config_schema.json` and `smartrouter/core/config.py` (for the cost map fields)
+- Ensure all tests in `tests/router/test_dispatcher.py` continue to pass. Update tests if method signatures change.
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION PLAN
+═══════════════════════════════════════════════════════════════
+1. **Monolithic Refactor:**
+   - Break down `RouterDispatcher.dispatch()` into smaller private methods: `_determine_initial_tier`, `_enforce_budget_limits`, `_enforce_context_capacity`, and `_execute_with_fallback`.
+   
+2. **Streaming Usage Tracking Bug:**
+   - Currently, if `request.stream == True`, the dispatcher returns `response_gen` immediately, bypassing the `usage_tracker.record_usage()` call on line 215. 
+   - Fix this by wrapping the generator so that when the stream completes, it calculates the usage and calls `usage_tracker.record_usage()`.
+
+3. **Hardcoded Cost Maps:**
+   - On line 212 of `dispatcher.py`, `cost_map` is hardcoded (`{"cheap": 0.001, "mid": 0.005, ...}`). 
+   - Move this to `smartrouter.yaml` and `config.py`. Add a `cost_per_1k_tokens` field to the `TierConfig` schema so the dispatcher reads `current_config.cost_per_1k_tokens`.
+
+4. **Summary-Based Complexity (P3_T14 integration):**
+   - Currently, the prompt string for the classifier only reads the final user message.
+   - Update the extraction logic so that if a `[Chat Summary]` message exists in the context (from P3-T13), it prepends the summary to the prompt before calling `self.classifier.score_prompt()`. This ensures the ML model has full semantic awareness.
+
+5. Save and commit your changes with a clear message!
