@@ -20,3 +20,25 @@ def check_context_limit(messages: list[ChatMessage], max_tokens: int | None) -> 
     if max_tokens is None:
         return True
     return estimate_token_count(messages) <= max_tokens
+
+
+def compress_context(messages: list[ChatMessage], max_tokens: int) -> list[ChatMessage]:
+    """
+    Compresses chat history by removing messages (starting from index 1)
+    if the token count exceeds max_tokens.
+    Preserves the first message (index 0) and the two most recent messages.
+    """
+    current_tokens = estimate_token_count(messages)
+    if len(messages) <= 3 or current_tokens <= max_tokens:
+        return messages
+
+    compressed_messages = list(messages)
+
+    while len(compressed_messages) > 3 and current_tokens > max_tokens:
+        # Remove message at index 1
+        removed_message = compressed_messages.pop(1)
+        # Deduct its token count
+        removed_tokens = (len(removed_message.content) // 4) + 5
+        current_tokens -= removed_tokens
+
+    return compressed_messages

@@ -6,7 +6,7 @@ from smartrouter.api.models import ChatCompletionRequest, ChatCompletionResponse
 from smartrouter.classifier.engine import ClassifierEngine
 from smartrouter.core.config import get_settings
 from smartrouter.router.clients import RouterClient
-from smartrouter.router.context_guard import check_context_limit
+from smartrouter.router.context_guard import check_context_limit, compress_context
 
 logger = logging.getLogger(__name__)
 
@@ -43,19 +43,29 @@ class RouterDispatcher:
         logger.info(f"Initial routing score: {score:.3f} -> {tier_name} tier")
 
         # 3. Context Guard Check and Upgrade
-        if tier_name == "cheap" and not check_context_limit(
+        if tier_name == "cheap" and tier_config.max_context_tokens is not None and not check_context_limit(
             request.messages, tier_config.max_context_tokens
         ):
-            logger.info("Context limit exceeded for 'cheap' tier. Upgrading to 'mid'.")
-            tier_name = "mid"
-            tier_config = self.settings.tiers.mid
+            logger.info("Context limit exceeded for 'cheap' tier. Attempting to compress context.")
+            compressed = compress_context(request.messages, tier_config.max_context_tokens)
+            if check_context_limit(compressed, tier_config.max_context_tokens):
+                request.messages = compressed
+            else:
+                logger.info("Even after compression, context limit exceeded for 'cheap' tier. Upgrading to 'mid'.")
+                tier_name = "mid"
+                tier_config = self.settings.tiers.mid
 
-        if tier_name == "mid" and not check_context_limit(
+        if tier_name == "mid" and tier_config.max_context_tokens is not None and not check_context_limit(
             request.messages, tier_config.max_context_tokens
         ):
-            logger.info("Context limit exceeded for 'mid' tier. Upgrading to 'smart'.")
-            tier_name = "smart"
-            tier_config = self.settings.tiers.smart
+            logger.info("Context limit exceeded for 'mid' tier. Attempting to compress context.")
+            compressed = compress_context(request.messages, tier_config.max_context_tokens)
+            if check_context_limit(compressed, tier_config.max_context_tokens):
+                request.messages = compressed
+            else:
+                logger.info("Even after compression, context limit exceeded for 'mid' tier. Upgrading to 'smart'.")
+                tier_name = "smart"
+                tier_config = self.settings.tiers.smart
 
         # 4. JSON Mode Enforcement
         if (
