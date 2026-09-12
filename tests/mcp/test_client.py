@@ -13,7 +13,9 @@ async def test_fetch_tools_success() -> None:
     mock_tools = [{"name": "test_tool", "description": "A test tool"}]
 
     with respx.mock(assert_all_called=True) as respx_mock:
-        respx_mock.get(f"{server_url}/tools").mock(return_value=httpx.Response(200, json=mock_tools))
+        respx_mock.get(f"{server_url}/tools").mock(
+            return_value=httpx.Response(200, json=mock_tools)
+        )
 
         tools = await client.fetch_tools(server_url)
         assert tools == mock_tools

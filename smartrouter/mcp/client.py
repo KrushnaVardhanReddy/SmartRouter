@@ -5,6 +5,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+
 class MCPClient:
     """
     Model Context Protocol (MCP) Client for interacting with osmcp server.
@@ -24,7 +25,9 @@ class MCPClient:
                     return data
                 return []
         except httpx.HTTPError as e:
-            logger.warning(f"Failed to fetch tools from {server_url}: {e}. Returning dummy tools.")
+            logger.warning(
+                f"Failed to fetch tools from {server_url}: {e}. Returning dummy tools."
+            )
             # Dummy tools as fallback for now
             return [
                 {
@@ -32,11 +35,9 @@ class MCPClient:
                     "description": "Search for a pattern in files",
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "pattern": {"type": "string"}
-                        },
-                        "required": ["pattern"]
-                    }
+                        "properties": {"pattern": {"type": "string"}},
+                        "required": ["pattern"],
+                    },
                 },
                 {
                     "name": "git_status",
@@ -44,19 +45,20 @@ class MCPClient:
                     "parameters": {
                         "type": "object",
                         "properties": {},
-                    }
-                }
+                    },
+                },
             ]
 
-    async def execute_tool(self, server_url: str, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute_tool(
+        self, server_url: str, tool_name: str, arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Executes a specific tool on the MCP server.
         """
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{server_url}/tools/{tool_name}/execute",
-                    json=arguments
+                    f"{server_url}/tools/{tool_name}/execute", json=arguments
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -64,5 +66,10 @@ class MCPClient:
                     return data
                 return {"result": data}
         except httpx.HTTPError as e:
-            logger.warning(f"Failed to execute tool {tool_name} on {server_url}: {e}. Returning dummy result.")
-            return {"status": "error", "message": f"Dummy fallback for execution of {tool_name}"}
+            logger.warning(
+                f"Failed to execute tool {tool_name} on {server_url}: {e}. Returning dummy result."
+            )
+            return {
+                "status": "error",
+                "message": f"Dummy fallback for execution of {tool_name}",
+            }

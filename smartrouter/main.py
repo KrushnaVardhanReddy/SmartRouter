@@ -5,9 +5,12 @@ from smartrouter.api.models import (
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
+from smartrouter.api.routes import router as api_router
 from smartrouter.router.clients import OpenRouterClient
 
 app = FastAPI(title="SmartRouter", version="1.0.0")
+
+app.include_router(api_router)
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)

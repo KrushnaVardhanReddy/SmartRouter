@@ -144,7 +144,10 @@ async def test_openrouter_client_generate_retries(monkeypatch):
     }
 
     with (
-        patch("httpx.AsyncClient.post", side_effect=[mock_response_429, mock_response_500, mock_response_200]) as mock_post,
+        patch(
+            "httpx.AsyncClient.post",
+            side_effect=[mock_response_429, mock_response_500, mock_response_200],
+        ) as mock_post,
         patch("asyncio.sleep") as mock_sleep,
     ):
         response = await client.generate(request)
@@ -152,9 +155,15 @@ async def test_openrouter_client_generate_retries(monkeypatch):
         assert mock_post.call_count == 3
 
         # Check headers in calls to ensure round-robin
-        assert mock_post.call_args_list[0][1]["headers"]["Authorization"] == "Bearer key1"
-        assert mock_post.call_args_list[1][1]["headers"]["Authorization"] == "Bearer key2"
-        assert mock_post.call_args_list[2][1]["headers"]["Authorization"] == "Bearer key3"
+        assert (
+            mock_post.call_args_list[0][1]["headers"]["Authorization"] == "Bearer key1"
+        )
+        assert (
+            mock_post.call_args_list[1][1]["headers"]["Authorization"] == "Bearer key2"
+        )
+        assert (
+            mock_post.call_args_list[2][1]["headers"]["Authorization"] == "Bearer key3"
+        )
 
         # Check exponential backoff calls
         assert mock_sleep.call_count == 2

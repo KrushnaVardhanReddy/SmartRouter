@@ -3,7 +3,7 @@ import pytest
 import respx
 from httpx import AsyncClient
 
-from smartrouter.api.models import ChatCompletionResponse
+from smartrouter.api.models import ChatCompletionResponse, UsageReportResponse
 
 
 @pytest.fixture
@@ -12,7 +12,9 @@ def mock_openrouter_api_key(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_chat_completions_route(async_client: AsyncClient, mock_openrouter_api_key):
+async def test_chat_completions_route(
+    async_client: AsyncClient, mock_openrouter_api_key
+):
     request_payload = {
         "model": "openai/gpt-3.5-turbo",
         "messages": [{"role": "user", "content": "Hello!"}],
@@ -59,3 +61,18 @@ async def test_chat_completions_invalid_payload(async_client: AsyncClient):
     }
     response = await async_client.post("/v1/chat/completions", json=payload)
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_usage_route(async_client: AsyncClient):
+    response = await async_client.get("/v1/usage")
+    assert response.status_code == 200
+
+    data = response.json()
+    parsed = UsageReportResponse(**data)
+
+    assert parsed.total_requests == 0
+    assert parsed.total_spent_usd == 0.0
+    assert parsed.hypothetical_spent_usd == 0.0
+    assert parsed.total_saved_usd == 0.0
+    assert parsed.shadow_mode_active is False

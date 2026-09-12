@@ -20,7 +20,9 @@ class SemanticCache:
 
         return dot_product / (norm1 * norm2)
 
-    async def get_cached_response(self, query_embedding: list[float], threshold: float = 0.95) -> str | None:
+    async def get_cached_response(
+        self, query_embedding: list[float], threshold: float = 0.95
+    ) -> str | None:
         best_match_response: str | None = None
         best_similarity = -1.0
 
